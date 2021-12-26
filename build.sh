@@ -104,6 +104,13 @@ Download! https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data "r
                 curl -s --data parse_mode=HTML --data chat_id="${TELEGRAM_CHAT}" --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
             fi
 
+            #if github release
+            if [ "${UPLOAD_TYPE}" == "SF" ]; then
+			 sshpass -p '${SF_PASS}' scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}/
+			 ## Add your telegram message here
+			 ## please 1 time to normal sftp username@frs.sourceforge.et and login once before running script , you would need install sshpass is not available
+            fi
+
             #if google drive
             if [ "${UPLOAD_TYPE}" == "GD" ]; then
                 GD_RELEASE="${BUILD_TYPE}"-"${ROM_ZIP}"

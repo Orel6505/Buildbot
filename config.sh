@@ -29,6 +29,11 @@ GD_PATH="rom/Test"
 GH_USERNAME=""
 GH_REPO=""
 
+#sourceforge
+SF_USER="<your username here>"
+SF_PROJECT="<project _name here>"
+SF_PASS=<sourceforge password needs to be passed in this variable u can do it in your way>
+
 #Telegram - Requierd for now
 TELEGRAM_USERNAME=""
 TELEGRAM_TOKEN=""
