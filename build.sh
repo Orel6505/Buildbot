@@ -5,6 +5,13 @@
 #
 
 ## Sync
+
+###
+SF_USER="<your username here>"
+SF_PROJECT="<project _name here>"
+export SF_PASS=<sourceforge password needs to be passed in this variable u can do it in your way>
+
+###
 sync() {
     if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${REPO_BRANCH}" ]; then
         mkdir "${MY_DIR}"/rom/"${ROM_NAME}"-"${REPO_BRANCH}"
@@ -102,6 +109,13 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                 curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed! The upload took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!
 Download! https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data "reply_markup": {"inline_keyboard": [[{"text":"Download!", "url": "https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}"}]]} --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
                 curl -s --data parse_mode=HTML --data chat_id="${TELEGRAM_CHAT}" --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
+            fi
+
+            #if github release
+            if [ "${UPLOAD_TYPE}" == "SF" ]; then
+			 sshpass -p '${SF_PASS}' scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}/
+			 ## Add your telegram message here
+			 ## please 1 time to normal sftp username@frs.sourceforge.et and login once before running script , you would need install sshpass is not available
             fi
 
             #if google drive
