@@ -100,7 +100,7 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                 cd "${MY_DIR}"/"${GH_REPO}"
                 gh release create "${GH_RELEASE}" "${ROM_ZIP}" "${ROM_HASH}" -t "${GH_RELEASE}"
                 curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed! The upload took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!
-Download! https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
+Download! https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data "reply_markup": {"inline_keyboard": [[{"text":"Download!", "url": "https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}"}]]} --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
                 curl -s --data parse_mode=HTML --data chat_id="${TELEGRAM_CHAT}" --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
             fi
 
@@ -114,7 +114,7 @@ Download! https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data ch
                 cp "${ROM_HASH}" "${GDRIVE_FOLDER}"
                 cd "${GDRIVE_FOLDER}"
                 ./"${GDRIVE_FOLDER}"/gdrive upload "${ROM_ZIP}"
-                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
+                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data "reply_markup": {"inline_keyboard": [[{"text":"Download!", "url": "https://drive.google.com/folderview?id=1-04oC14tCH6vPsaMd5_bRnfLWI9Te6hA"}]]} --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
             fi
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${REPO_BRANCH}"
         fi
