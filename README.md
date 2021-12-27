@@ -22,7 +22,9 @@ done what we told you to do.
 
 3. Make a GitHub token with proper permissions for uploading releases to your repositories.
 
-4. Create local_manifests repo in github and upload your manifest.
+4. Log in 1 time to normal sftp (`sftp username@frs.sourceforge.net`) before running script if you choosed to upload to Sourceforge
+
+5. Create local_manifests repo in github and upload your manifest.
 
 # How To Use This Script
 
@@ -46,7 +48,7 @@ Use this example as a guide
             <!-- Device Tree -->
             <project name="android_device_samsung_beyond1lte"        path="device/samsung/beyond1lte"        remote="LineageOS"  revision="lineage-18.1" />
             <project name="android_device_samsung_exynos9820-common" path="device/samsung/exynos9820-common" remote="LineageOS"  revision="lineage-18.1" />
-            <project name="android_device_samsung_slsi_sepolicy"     path="device/samsung_slsi/sepolicy"     remote="LineageOS"  revision="lineage-18.1"  clone-depth="1" />
+            <project name="android_device_samsung_slsi_sepolicy"     path="device/samsung_slsi/sepolicy"     remote="LineageOS"  revision="lineage-18.1" clone-depth="1" />
             <project name="proprietary_vendor_samsung"               path="vendor/samsung"                   remote="TheMuppets" revision="lineage-18.1" clone-depth="1" />
             <project name="android_kernel_samsung_exynos9820"        path="kernel/samsung/exynos9820"        remote="LineageOS"  revision="lineage-18.1" clone-depth="1" />
         
@@ -57,44 +59,42 @@ Use this example as a guide
 
 # Configuration flags
 
-`ROM_NAME` - name of your ROM ( For Example `LineageOS`)
+`ROM_NAME` - name of your ROM ( For example `LineageOS`)
 
-`REPO_URL` -  URL link to ROM manifest ( For Example `https://github.com/LineageOS/android`)
+`ANDROID_VERSION` - Android version of your ROM ( For example `11`)
 
-`REPO_BRANCH` -  name of your ROM ( For Example `lineage-18.1`)
+`REPO_URL` -  URL link to ROM manifest ( For example `https://github.com/LineageOS/android`)
 
-`MANIFEST_URL` -  URL link to your manifest ( For Example `https://github.com/Orel6505/local_manifests`)
+`REPO_BRANCH` -  name of your ROM ( For example `lineage-18.1`)
+
+`MANIFEST_URL` -  URL link to your manifest ( For example `https://github.com/Orel6505/local_manifests`)
 
 `MANIFEST_BRANCH` -  manifest branch 
 
+`DEVICE_CODENAME` - Device codenames (For example: `"beyond1lte"` for Samsung Galaxy S10, you can send more than 1 device (don't forget to include them in your manifest). for example: `"beyond0lte beyond1lte beyond2lte"`)
 
-`DEVICE_CODENAME` - Device codenames (For Example: `"beyond1lte"` for Samsung Galaxy S10, you can send more than 1 device (don't forget to include them in your manifest). for example: `"beyond0lte beyond1lte beyond2lte"`)
+`LUNCH_NAME` - ROM's custom lunch name (For example: `lineage` from `lineage_beyond1lte-userdebug`)
 
-`LUNCH_NAME` - ROM's custom lunch name (For Example: `lineage` from `lineage_beyond1lte-userdebug`)
-
-`BACON_NAME` - ROM's custom bacon name (For Example: most of the roms using `bacon`)
-
+`BACON_NAME` - ROM's custom bacon name (For example: most of the roms using `bacon`)
 
 `UPLOAD_TYPE` -`GD` for Gdrive, `GH` for Github and `OFF` for disable upload
 
-`BUILD_TYPE` - Describe for what purpose this build (For Example: `Test`)
+`BUILD_TYPE` - Describe for what purpose this build (For example: `Test`)
 
-`ANDROID_VERSION` - useless for now 
+`SF_USER` -  your SourceForge username (for example `Orel6505`)
 
+`SF_PASS` -  your SourceForge password (not ssh)
 
-`GD_PATH` - Gdrive upload path - useless for now
+`SF_PROJECT` - SourceForge project name you want to upload to (For example: `orel6505-builds`)
 
+`GD_PATH` - Gdrive upload path id (for example: `1-04oC14tCH6vPsaMd5_bRnfLWI9Te6hA`, you can found it after the url `https://drive.google.com/drive/folders/1-04oC14tCH6vPsaMd5_bRnfLWI9Te6hA`. DO NOT set in to: for example "Test" it WONT WORK.)
 
-`GH_USERNAME` - your GitHub username (for Example `Orel6505`)
+`GH_USERNAME` - your GitHub username (for example `Orel6505`)
 
 `GH_REPO` - your Github releases repo (you can use any repo for releases)
-
 
 `TELEGRAM_USERNAME` - your Telegram username (for Example `@Orel6505`)
 
 `TELEGRAM_TOKEN` - your Telegram bot token (for Example `123456:AbcDefGhi-JklMnoPrw`)
 
 `TELEGRAM_CHAT` - your Telegram group id (add `@missrose_bot` to your group and send `/id` to see your group id)
-
-
-
