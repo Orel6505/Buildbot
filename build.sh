@@ -53,7 +53,7 @@ build() {
 	        DIFF_BUILD=$((END_BUILD-START_BUILD))
 
 	        curl -s --data parse_mode=HTML --data text="dumpvars for ${CODENAME} failed.
-"${TELEGRAM_USERNAME}" don't be lazy and open build machine for errors" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
+"${TELEGRAM_USERNAME}" don't be lazy and open build machine for errors" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
             
             curl -s --data parse_mode=HTML --data chat_id="${TELEGRAM_CHAT}" --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
             return 1
@@ -77,16 +77,16 @@ build() {
             curl -s --data parse_mode=HTML --data text="${ROM_NAME} for ${CODENAME} succeed!
 The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage 
             
-            cd out/target/product/"${CODENAME}"
+            cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
             ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }') 
-            ROM_ZIP="$(basename $ROM_ZIP)"
-            ROM_HASH=ls "*.sha256sum"
+            ROM_ZIP=$(basename $ROM_ZIP)
+            ROM_HASH=$(ls "${ROM_NAME}*.sha256sum")
             if ! [ "${ROM_HASH}" == "" ]; then
                 ROM_HASH256=$(find -type f -name "*.sha256sum" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }')
-                ROM_HASH="$(basename $ROM_HASH256)"
-            else 
+                ROM_HASH=$(basename $ROM_HASH256)
+            else
                 ROM_HASH5=$(find -type f -name "*.md5sum" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }')
-                ROM_HASH="$(basename $ROM_HASH5)"
+                ROM_HASH=$(basename $ROM_HASH5)
             fi
 
             #if github release
@@ -101,17 +101,17 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                 curl -s --data parse_mode=HTML --data text="Starting to upload..." --data chat_id=$TELEGRAM_CHAT --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage 
                 gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${ROM_HASH}"
                 curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
-Download! https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
+https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
                 curl -s --data parse_mode=HTML --data chat_id="${TELEGRAM_CHAT}" --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
             fi
 
             #if sourceforge release
             if [ "${UPLOAD_TYPE}" == "SF" ]; then
                 curl -s --data parse_mode=HTML --data text="Starting to upload..." --data chat_id=$TELEGRAM_CHAT --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage 
-			    sshpass -p '${SF_PASS}' scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
-                sshpass -p '${SF_PASS}' scp ${ROM_HASH} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
+			    sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
+                sshpass -p "${SF_PASS}" scp ${ROM_HASH} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
 			    curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
-Download! https://sourceforge.net//home/frs/project/${SF_PROJECT}/${CODENAME}/})" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
+https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/})" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
             fi
 
             #if google drive
@@ -127,7 +127,7 @@ Download! https://sourceforge.net//home/frs/project/${SF_PROJECT}/${CODENAME}/})
                 curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
                 https://drive.google.com/drive/folders/${GD_PATH}" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
             fi
-            cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${REPO_BRANCH}"
+            cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
         fi
     done
 }
