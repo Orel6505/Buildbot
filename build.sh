@@ -28,7 +28,7 @@ sync() {
 "${TELEGRAM_USERNAME}" don't be lazy and open build machine for errors" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage 
         
         curl -s --data parse_mode=HTML --data chat_id=$TELEGRAM_CHAT --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
-        exit 1
+        return 1
     else
         END_REPO=$(date +"%s")
         DIFF_REPO=$((END_REPO-START_REPO))
@@ -56,7 +56,7 @@ build() {
 "${TELEGRAM_USERNAME}" don't be lazy and open build machine for errors" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
             
             curl -s --data parse_mode=HTML --data chat_id="${TELEGRAM_CHAT}" --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
-            exit 1
+            return 1
         fi
         curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} Build for ${CODENAME} started!" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage 
         make ${BACON_NAME}
@@ -69,7 +69,7 @@ build() {
 "${TELEGRAM_USERNAME}" don't be lazy and open build machine for errors" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage 
             curl -s --data parse_mode=HTML --data chat_id="${TELEGRAM_CHAT}" --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
 
-            exit 1
+            return 1
         else
             END_BUILD=$(date +"%s")
 	        DIFF_BUILD=$((END_BUILD-START_BUILD))
@@ -133,7 +133,7 @@ Download! https://sourceforge.net//home/frs/project/${SF_PROJECT}/${CODENAME}/})
 }
 
 ## Start
-if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${REPO_BRANCH}/bootable" ]; then
+if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ]; then
     sync
 fi
 build
