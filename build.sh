@@ -80,6 +80,7 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
             ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }') 
             ROM_ZIP=$(basename $ROM_ZIP)
+            RECOVERY_IMG=$(ls recovery.img)
             ROM_HASH=$(ls "${ROM_NAME}"*.sha256sum)
             if ! [ "${ROM_HASH}" == "" ]; then
                 ROM_HASH256=$(find -type f -name "*.sha256sum" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }')
@@ -97,9 +98,17 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                 fi
                 cp "${ROM_ZIP}" "${MY_DIR}"/"${GH_REPO}"
                 cp "${ROM_HASH}" "${MY_DIR}"/"${GH_REPO}"
+                if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                    cp "${RECOVERY_IMG}" "${MY_DIR}"/"${GH_REPO}"
+                fi
                 cd "${MY_DIR}"/"${GH_REPO}"
                 curl -s --data parse_mode=HTML --data text="Starting to upload..." --data chat_id=$TELEGRAM_CHAT --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage 
-                gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${ROM_HASH}"
+                if ! [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                    gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${ROM_HASH}" "${RECOVERY_IMG}"
+                    rm "${RECOVERY_IMG}"
+                else 
+                    gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${ROM_HASH}"
+                fi
                 curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
 https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
                 curl -s --data parse_mode=HTML --data chat_id="${TELEGRAM_CHAT}" --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendSticker
@@ -110,6 +119,9 @@ https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE})" --data chat_id="${T
                 curl -s --data parse_mode=HTML --data text="Starting to upload..." --data chat_id=$TELEGRAM_CHAT --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage 
 			    sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
                 sshpass -p "${SF_PASS}" scp ${ROM_HASH} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
+                if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                    sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
+                fi
 			    curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
 https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/})" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
             fi
@@ -122,8 +134,15 @@ https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/})" --data chat_id="${
                 fi
                 cp "${ROM_ZIP}" "${GDRIVE_FOLDER}"
                 cp "${ROM_HASH}" "${GDRIVE_FOLDER}"
+                if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                    cp "${RECOVERY_IMG}" "${GDRIVE_FOLDER}"
+                fi
                 cd "${GDRIVE_FOLDER}"
                 ./"${GDRIVE_FOLDER}"/gdrive upload "${ROM_ZIP}" --parent ${GD_PATH} --share --delete
+                ./"${GDRIVE_FOLDER}"/gdrive upload "${ROM_HASH}" --parent ${GD_PATH} --share --delete
+                if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                    ./"${GDRIVE_FOLDER}"/gdrive upload "${RECOVERY_IMG}" --parent ${GD_PATH} --share --delete
+                fi
                 curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
                 https://drive.google.com/drive/folders/${GD_PATH}" --data chat_id="${TELEGRAM_CHAT}" --request POST https://api.telegram.org/bot"${TELEGRAM_TOKEN}"/sendMessage
             fi

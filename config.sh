@@ -20,6 +20,7 @@ BACON_NAME=""
 
 #Upload stuff - Optional
 UPLOAD_TYPE=""
+UPLOAD_RECOVERY=""
 BUILD_TYPE=""
 
 #Google drive - Optional
