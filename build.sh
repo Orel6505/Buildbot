@@ -80,7 +80,7 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
             ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }') 
             ROM_ZIP=$(basename $ROM_ZIP)
-            ROM_HASH=$(ls "${ROM_NAME}*.sha256sum")
+            ROM_HASH=$(ls "${ROM_NAME}"*.sha256sum)
             if ! [ "${ROM_HASH}" == "" ]; then
                 ROM_HASH256=$(find -type f -name "*.sha256sum" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }')
                 ROM_HASH=$(basename $ROM_HASH256)
