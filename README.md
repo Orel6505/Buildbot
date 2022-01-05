@@ -37,25 +37,7 @@ done what we told you to do.
 4. run `start.sh` to start the script.
 
 # How to create local_manifests
-Use this example as a guide
-
-        <?xml version="1.0" encoding="UTF-8"?>
-        <manifest>
-            <!-- remote source -->
-            <remote name="LineageOS" fetch="https://github.com/LineageOS" />
-            <remote name="TheMuppets" fetch="https://github.com/TheMuppets" />
-
-            <!-- Device Tree -->
-            <project name="android_device_samsung_beyond1lte"        path="device/samsung/beyond1lte"        remote="LineageOS"  revision="lineage-18.1" />
-            <project name="android_device_samsung_exynos9820-common" path="device/samsung/exynos9820-common" remote="LineageOS"  revision="lineage-18.1" />
-            <project name="android_device_samsung_slsi_sepolicy"     path="device/samsung_slsi/sepolicy"     remote="LineageOS"  revision="lineage-18.1" clone-depth="1" />
-            <project name="proprietary_vendor_samsung"               path="vendor/samsung"                   remote="TheMuppets" revision="lineage-18.1" clone-depth="1" />
-            <project name="android_kernel_samsung_exynos9820"        path="kernel/samsung/exynos9820"        remote="LineageOS"  revision="lineage-18.1" clone-depth="1" />
-        
-            <!-- HALs -->
-            <project name="android_hardware_samsung"                 path="hardware/samsung"                 remote="LineageOS"  revision="lineage-18.1" clone-depth="1" />
-            <project name="android_hardware_samsung_nfc"             path="hardware/samsung/nfc"             remote="LineageOS"  revision="lineage-18.1" clone-depth="1" />
-        </manifest> 
+See `https://github.com/Orel6505/local_manifests` for guide
 
 # Configuration flags
 
@@ -79,6 +61,8 @@ Use this example as a guide
 
 `UPLOAD_TYPE` -`GD` for Gdrive, `GH` for Github and `OFF` for disable upload
 
+`UPLOAD_RECOVERY` - Do you want to upload recovery.img?
+
 `BUILD_TYPE` - Describe for what purpose this build (For example: `Test`)
 
 `SF_USER` -  your SourceForge username (for example `Orel6505`)
@@ -93,8 +77,8 @@ Use this example as a guide
 
 `GH_REPO` - your Github releases repo (you can use any repo for releases)
 
-`TELEGRAM_USERNAME` - your Telegram username (for Example `@Orel6505`)
+`TG_USERNAME` - your Telegram username (for Example `@Orel6505`)
 
-`TELEGRAM_TOKEN` - your Telegram bot token (for Example `123456:AbcDefGhi-JklMnoPrw`)
+`TG_TOKEN` - your Telegram bot token (for Example `123456:AbcDefGhi-JklMnoPrw`)
 
-`TELEGRAM_CHAT` - your Telegram group id (add `@missrose_bot` to your group and send `/id` to see your group id)
+`TG_CHAT` - your Telegram group id (add `@missrose_bot` to your group and send `/id` to see your group id)

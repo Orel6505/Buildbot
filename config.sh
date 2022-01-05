@@ -23,21 +23,21 @@ UPLOAD_TYPE=""
 UPLOAD_RECOVERY=""
 BUILD_TYPE=""
 
-#Google drive - Optional
+#Google Drive - Optional
 GD_PATH=""
 
-#Github releases - Optional
+#Github Releases - Optional
 GH_USERNAME=""
 GH_REPO=""
 
-#sourceforge - Optional
+#SourceForge - Optional
 SF_USER=""
 SF_PASS=""
 SF_PROJECT=""
 
-#Telegram - Requierd for now
-TELEGRAM_USERNAME=""
-TELEGRAM_TOKEN=""
-TELEGRAM_CHAT=""
+#Telegram - Optional
+TG_USERNAME=""
+TG_TOKEN=""
+TG_CHAT=""
 
 source build.sh
