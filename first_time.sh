@@ -6,8 +6,8 @@
 
 export MY_DIR=$(pwd)
 GD_FOLDER="${MY_DIR}/gd"
-if ! [ -d "${MY_DIR}"/gdrive ]; then
-    mkdir "${MY_DIR}"/gdrive
+if ! [ -d "${MY_DIR}"/gd ]; then
+    mkdir "${MY_DIR}"/gd
 fi
 
 ## Packages
@@ -15,11 +15,11 @@ sudo apt install git repo adb fastboot curl sshpass scp gh -y bc bison build-ess
 
 ## Gdrive
 wget -P "${GD_FOLDER}" https://github.com/prasmussen/gdrive/releases/download/2.1.1/gdrive_2.1.1_linux_386.tar.gz
-tar -xf "${GD_FOLDER}"/gdrive_2.1.1_linux_386.tar.gz -C "${BIN_FOLDER}"
+tar -xf "${GD_FOLDER}"/gdrive_2.1.1_linux_386.tar.gz -C "${GD_FOLDER}"
 chmod +x "${GD_FOLDER}"/gdrive
 rm -fr "${GD_FOLDER}"/gdrive_2.1.1_linux_386.tar.gz
 
 cd gd
-./gd/gdrive about
+./gdrive about
 
 gh auth login

@@ -15,18 +15,18 @@ sync() {
     if [ -d ".repo/local_manifests" ]; then
         rm -fr ".repo/local_manifests"
     fi
-    git clone "${MANIFEST_URL}" -b "${MANIFEST_BRANCH}" .repo/local_manifests
+    git clone "${MANIFEST_URL}" -b "${MANIFEST_BRANCH}" .repo/local_manifests --depth=1
     if [ "${TG_CHAT}" != "" ]; then
-        curl -s --data parse_mode=HTML --data text="Startd to sync ${ROM_NAME}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+        curl -s --data parse_mode=HTML --data text="Startd to sync ${ROM_NAME}-${ANDROID_VERSION}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
     else 
-        echo "Startd to sync ${ROM_NAME}!"
+        echo "Startd to sync ${ROM_NAME}-${ANDROID_VERSION}!"
     fi
     repo sync --force-sync --no-tags --no-clone-bundle
     if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ]; then 
         END_REPO=$(date +"%s")
         DIFF_REPO=$((END_REPO-START_REPO))
         if [ "${TG_CHAT}" != "" ]; then
-            curl -s --data parse_mode=HTML --data text="${ROM_NAME} Sync failed in $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!
+            curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} Sync failed in $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!
 "${TG_USERNAME}" don't be lazy and open build machine for errors" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
         else
             echo "Sync failed in $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!"
@@ -37,7 +37,7 @@ sync() {
         END_REPO=$(date +"%s")
         DIFF_REPO=$((END_REPO-START_REPO))
         if [ "${TG_CHAT}" != "" ]; then
-            curl -s --data parse_mode=HTML --data text="${ROM_NAME} source synced successfully! It's took $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot$TG_TOKEN/sendMessage 
+            curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} source synced successfully! It's took $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot$TG_TOKEN/sendMessage 
             curl -s --data parse_mode=HTML --data text="The sync succedded, Starting to build..." --data chat_id=$TG_CHAT --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
         else
             echo "The sync succedded, Starting to build..." 
@@ -77,8 +77,9 @@ build() {
 	        END_BUILD=$(date +"%s")
 	        DIFF_BUILD=$((END_BUILD-START_BUILD))
             if [ "${TG_CHAT}" != "" ]; then
-	            curl -s --data parse_mode=HTML --data text="Build for ${CODENAME} failed in $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!
+	            curl -s --data parse_mode=HTML --data text="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} failed in $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!
 "${TG_USERNAME}" don't be lazy and open build machine for errors" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+                curl -F document=@out/error.log --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument?chat_id="${TG_CHAT}"
                 curl -s --data parse_mode=HTML --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendSticker
             else
                 echo "Build for ${CODENAME} failed."
@@ -88,7 +89,7 @@ build() {
             END_BUILD=$(date +"%s")
 	        DIFF_BUILD=$((END_BUILD-START_BUILD))
             if [ "${TG_CHAT}" != "" ]; then
-                curl -s --data parse_mode=HTML --data text="${ROM_NAME} for ${CODENAME} succeed!
+                curl -s --data parse_mode=HTML --data text="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} succeed!
 The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
             else
                 echo "${ROM_NAME} for ${CODENAME} succeed!"
@@ -97,8 +98,7 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
             ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }') 
             ROM_ZIP=$(basename $ROM_ZIP)
             RECOVERY_IMG=$(ls recovery.img)
-            ROM_HASH=$(ls "${ROM_NAME}"*.sha256sum)
-            if ! [ "${ROM_HASH}" == "" ]; then
+            if [ -e *.sha256 ]; then
                 ROM_HASH256=$(find -type f -name "*.sha256sum" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }')
                 ROM_HASH=$(basename $ROM_HASH256)
             else
@@ -118,7 +118,6 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                     cp "${RECOVERY_IMG}" "${MY_DIR}"/"${GH_REPO}"
                 fi
                 cd "${MY_DIR}"/"${GH_REPO}"
-                curl -s --data parse_mode=HTML --data text="Starting to upload..." --data chat_id=$TG_CHAT --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
                 if ! [ "${UPLOAD_RECOVERY}" = "true" ]; then
                     gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${ROM_HASH}" "${RECOVERY_IMG}"
                     rm "${RECOVERY_IMG}"
@@ -135,7 +134,6 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
 
             #if sourceforge release
             if [ "${UPLOAD_TYPE}" == "SF" ]; then
-                curl -s --data parse_mode=HTML --data text="Starting to upload..." --data chat_id=$TG_CHAT --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
 			    sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
                 sshpass -p "${SF_PASS}" scp ${ROM_HASH} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
                 if [ "${UPLOAD_RECOVERY}" = "true" ]; then
@@ -151,10 +149,9 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
 
             #if google drive
             if [ "${UPLOAD_TYPE}" == "GD" ]; then
-                GD_RELEASE="${BUILD_TYPE}"-"${ROM_ZIP}"
                 GD_FOLDER="${MY_DIR}"/gd
-                if ! [ -d "${GD_FOLDER}" ]; then
-                    mkdir "${GD_FOLDER}"
+                if ! [ -e "${GD_FOLDER}"/gdrive ]; then
+                    echo "you didn't lisen t"
                 fi
                 cp "${ROM_ZIP}" "${GD_FOLDER}"
                 cp "${ROM_HASH}" "${GD_FOLDER}"
@@ -174,26 +171,6 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                     echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://drive.google.com/drive/folders/${GD_PATH}"
                 fi
             fi
-
-            #if telegram
-            if [ "${UPLOAD_TYPE}" == "TG" ]; then
-                TG_RELEASE="${BUILD_TYPE}"-"${ROM_ZIP}"
-                TG_FOLDER="${MY_DIR}"/tg
-                if ! [ -d "${TG_FOLDER}" ]; then
-                    mkdir "${TG_FOLDER}"
-                fi
-                cp "${ROM_ZIP}" "${TG_FOLDER}"
-                if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                    cp "${RECOVERY_IMG}" "${TG_FOLDER}"
-                fi
-                cd ${TG_FOLDER}
-                curl -F document=@"${ROM_ZIP}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument?chat_id="${TG_CHAT}"
-                if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                    curl -F document=@"${ROM_ZIP}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument?chat_id="${TG_CHAT}"
-                    rm ${RECOVERY_IMG}
-                fi
-                rm "${ROM_ZIP}"
-            fi
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
         fi
     done
@@ -203,5 +180,7 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
 if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ]; then
     sync
 fi
-build
+if [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ]; then
+    build
+fi
 cd "${MY_DIR}"
