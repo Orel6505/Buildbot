@@ -151,7 +151,7 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
             if [ "${UPLOAD_TYPE}" == "GD" ]; then
                 GD_FOLDER="${MY_DIR}"/gd
                 if ! [ -e "${GD_FOLDER}"/gdrive ]; then
-                    echo "you didn't lisen t"
+                    echo "you didn't lisen to me, Please read README.md and run first_time.sh to set Gdrive"
                 fi
                 cp "${ROM_ZIP}" "${GD_FOLDER}"
                 cp "${ROM_HASH}" "${GD_FOLDER}"
@@ -159,10 +159,10 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                     cp "${RECOVERY_IMG}" "${GDRIVE_FOLDER}"
                 fi
                 cd "${GD_FOLDER}"
-                ./"${GD_FOLDER}"/gdrive upload "${ROM_ZIP}" --parent ${GD_PATH} --share --delete
-                ./"${GD_FOLDER}"/gdrive upload "${ROM_HASH}" --parent ${GD_PATH} --share --delete
+                ./gdrive upload "${ROM_ZIP}" --parent ${GD_PATH} --share --delete
+                ./gdrive upload "${ROM_HASH}" --parent ${GD_PATH} --share --delete
                 if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                    ./"${GD_FOLDER}"/gdrive upload "${RECOVERY_IMG}" --parent ${GD_PATH} --share --delete
+                    ./gdrive upload "${RECOVERY_IMG}" --parent ${GD_PATH} --share --delete
                 fi
                 if [ "${TG_CHAT}" != "" ]; then
                     curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
