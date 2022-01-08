@@ -134,16 +134,28 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
 
             #if sourceforge release
             if [ "${UPLOAD_TYPE}" == "SF" ]; then
-			    sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
-                sshpass -p "${SF_PASS}" scp ${ROM_HASH} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
-                if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                    sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
-                fi
-                if [ "${TG_CHAT}" != "" ]; then
-			        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
-                    curl -s --data parse_mode=HTML --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendSticker
-                else
-                    echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/"
+                if [ "${SF_PATH}" == "" ]; then
+			        sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
+                    if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                        sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
+                    fi
+                    if [ "${TG_CHAT}" != "" ]; then
+			            curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+                        curl -s --data parse_mode=HTML --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendSticker
+                    else
+                        echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/"
+                    fi
+                else 
+                    sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${SF_PATH}
+                    if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                        sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${SF_PATH}
+                    fi
+                    if [ "${TG_CHAT}" != "" ]; then
+			            curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+                        curl -s --data parse_mode=HTML --data sticker=CAADBQADGgEAAixuhBPbSa3YLUZ8DBYE --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendSticker
+                    else
+                        echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/"
+                    fi
                 fi
             fi
 

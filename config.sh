@@ -34,6 +34,7 @@ GH_REPO=""
 SF_USER=""
 SF_PASS=""
 SF_PROJECT=""
+SF_PATH=""
 
 #Telegram - Optional
 TG_USERNAME=""
