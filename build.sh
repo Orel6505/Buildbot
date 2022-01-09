@@ -52,6 +52,22 @@ build() {
     source build/envsetup.sh
     for CODENAME in ${DEVICE_CODENAME}
     do
+        if [ "${AUTO_BRINGUP}" == "Y" ] || [ "${AUTO_BRINGUP}" == "yes" ] || [ "${AUTO_BRINGUP}" == "Yes" ] ; then
+            VENDOR_NAME="$(find . ~ -type d -name "${CODENAME}" | sort -nr | awk 'NR==1,NR==1')"
+            VENDOR_NAME="$(dirname $VENDOR_NAME)"
+            VENDOR_NAME="$(basename $VENDOR_NAME)"
+            cd "${MY_DIR}"/device/"${VENDOR_NAME}"/"${CODENAME}"
+            PREBUILT_LUNCH=$(ls *${CODENAME}*|cut -f1 -d _)
+            sed -i "s/${PREBUILT_LUNCH}/${LUNCH_NAME}/g" ${PREBUILT_LUNCH}_${CODENAME}.mk
+            if [-e "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/vendor/"${LUNCH_NAME}"/config/common_full_phone.mk]; then
+                sed -i "/call inherit-product, vendor/c\$(call inherit-product, vendor/${LUNCH_NAME}/config/common_full_phone.mk)." ${PREBUILT_LUNCH}_${CODENAME}.mk
+            else
+                sed -i "/call inherit-product, vendor/c\$(call inherit-product, vendor/${LUNCH_NAME}/config/common.mk)." ${PREBUILT_LUNCH}_${CODENAME}.mk
+            fi
+            sed -i "s/${PREBUILT_LUNCH}/${LUNCH_NAME}/g" AndroidProducts.mk
+            mv ${PREBUILT_LUNCH}_${CODENAME}.mk ${LUNCH_NAME}_${CODENAME}.mk
+            cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
+        fi
         lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug
         START_BUILD=$(date +"%s")
         if [ -e "{${OUT_DIR}"/out/target/product/"${CODENAME}"/build_fingerprint.txt ]; then
