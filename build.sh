@@ -12,10 +12,15 @@ sync() {
     cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
     START_REPO=$(date +"%s")
     repo init -u "${REPO_URL}" -b "${REPO_BRANCH}" --depth=1
-    if [ -d ".repo/local_manifests" ]; then
-        rm -fr ".repo/local_manifests"
+    if [ "${MANIFEST_URL}" != "" ]; then
+        if [ -d ".repo/local_manifests" ]; then
+            rm -fr ".repo/local_manifests"
+        fi
+        git clone "${MANIFEST_URL}" -b "${MANIFEST_BRANCH}" .repo/local_manifests --depth=1
+    else
+        echo "warning: you started to sync ${ROM_NAME}-${ANDROID_VERSION} without device tree manifest" 
+        echo "this can may stop the build later..."
     fi
-    git clone "${MANIFEST_URL}" -b "${MANIFEST_BRANCH}" .repo/local_manifests --depth=1
     if [ "${TG_CHAT}" != "" ]; then
         curl -s --data parse_mode=HTML --data text="Started to sync ${ROM_NAME}-${ANDROID_VERSION}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
     else 
@@ -68,8 +73,7 @@ build() {
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
         fi
         lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug
-        START_BUILD=$(date +"%s")
-        LUNCH_STATUS=${?}
+        LUNCH_STATUS=${?}&&START_BUILD=$(date +"%s")
         if [ "${LUNCH_STATUS}" != 0 ]; then
 	        END_BUILD=$(date +"%s")
 	        DIFF_BUILD=$((END_BUILD-START_BUILD))
