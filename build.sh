@@ -119,7 +119,7 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                     echo "${ROM_NAME} for ${CODENAME} succeed!"
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
-                ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==3 {print $2 }' | head -n 20) 
+                ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2 }') 
                 ROM_ZIP=$(basename $ROM_ZIP)
                 RECOVERY_IMG=$(ls recovery.img)
                 if [ -e *.sha256 ]; then
