@@ -119,15 +119,11 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                     echo "${ROM_NAME} for ${CODENAME} succeed!"
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
-                ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2 }') 
+                ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2}')
                 ROM_ZIP=$(basename $ROM_ZIP)
-                RECOVERY_IMG=$(ls recovery.img)
-                if [ -e *.sha256 ]; then
-                    ROM_HASH256=$(find -type f -name "*.sha256sum" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }')
-                    ROM_HASH=$(basename $ROM_HASH256)
-                else
-                    ROM_HASH5=$(find -type f -name "*.md5sum" -exec stat -c '%Y %n' {} \; | sort -nr | awk 'NR==1,NR==1 {print $2 }')
-                    ROM_HASH=$(basename $ROM_HASH5)
+                ROM_HASH=$(sha256sum "${ROM_ZIP}" | cut -f1 -d " ")
+                if [ -e recovery.img ] && [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                    RECOVERY_IMG="recovery.img"
                 fi
 
                 #if github release
@@ -143,13 +139,14 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                     fi
                     cd "${MY_DIR}"/"${GH_REPO}"
                     if ! [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                        gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${ROM_HASH}" "${RECOVERY_IMG}"
+                        gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${RECOVERY_IMG}"
                         rm "${RECOVERY_IMG}"
                     else
-                        gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${ROM_HASH}"
+                        gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}"
                     fi
                     if [ "${TG_CHAT}" != "" ]; then
-                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
+sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
                     else
                         echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}"
                     fi
@@ -173,7 +170,8 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                             sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${SF_PATH}
                         fi
                         if [ "${TG_CHAT}" != "" ]; then
-			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
+sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
                         else
                             echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/"
                         fi
@@ -187,18 +185,17 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                         echo "you didn't lisen to me, Please read README.md and run first_time.sh to set Gdrive"
                     fi
                     cp "${ROM_ZIP}" "${GD_FOLDER}"
-                    cp "${ROM_HASH}" "${GD_FOLDER}"
                     if [ "${UPLOAD_RECOVERY}" = "true" ]; then
                         cp "${RECOVERY_IMG}" "${GDRIVE_FOLDER}"
                     fi
                     cd "${GD_FOLDER}"
                     ./gdrive upload "${ROM_ZIP}" --parent ${GD_PATH} --share --delete
-                    ./gdrive upload "${ROM_HASH}" --parent ${GD_PATH} --share --delete
                     if [ "${UPLOAD_RECOVERY}" = "true" ]; then
                         ./gdrive upload "${RECOVERY_IMG}" --parent ${GD_PATH} --share --delete
                     fi
                     if [ "${TG_CHAT}" != "" ]; then
-                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
+sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
                     else
                         echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://drive.google.com/drive/folders/${GD_PATH}"
                     fi
