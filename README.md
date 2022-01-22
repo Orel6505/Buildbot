@@ -16,15 +16,15 @@ done what we told you to do.
 
 # Prerequisites
 
-1. Fork this repository.
+1. Fork this repository. (Recommended & Optional)
 
-2. Create a Telegram Bot. (Required for now) 
+2. Create a Telegram Bot. (Recommended & Optional)
 
-3. Make a GitHub token with proper permissions for uploading releases to your repositories.
+3. Make a GitHub token with proper permissions for uploading releases to your repositories. (If you choosing to upload to GitHub)
 
-4. Log in 1 time to normal sftp (`sftp username@frs.sourceforge.net`) before running script if you choosed to upload to Sourceforge
+4. Log in 1 time to normal sftp (`sftp username@frs.sourceforge.net`) before running script if you choosed to upload to Sourceforge (if you'll not log in once, it'll not upload it because you need to set "save fingerprint")
 
-5. Create local_manifests repo in github and upload your manifest.
+5. Create local_manifests repo in github and upload your manifest. (Required for `MANIFEST_URL`)
 
 # How To Use This Script
 
@@ -34,7 +34,7 @@ done what we told you to do.
 
 3. run `first_time.sh` even if you already built Android on your PC before.
 
-4. run `start.sh` to start the script.
+4. run `config.sh` to start the script.
 
 # How to create local_manifests
 See `https://github.com/Orel6505/local_manifests` for guide
@@ -57,6 +57,8 @@ See `https://github.com/Orel6505/local_manifests` for guide
 
 `LUNCH_NAME` - ROM's custom lunch name (For example: `lineage` from `lineage_beyond1lte-userdebug`)
 
+`AUTO_BRINGUP` - this feature will bring up your device tree from lineage_beyond1lte to aosp_beyond1lte automatically (`Y` to enable, `N` to disable)
+
 `BACON_NAME` - ROM's custom bacon name (For example: most of the roms using `bacon`)
 
 `UPLOAD_TYPE` -`GD` for Gdrive, `GH` for Github and `OFF` for disable upload
@@ -70,6 +72,8 @@ See `https://github.com/Orel6505/local_manifests` for guide
 `SF_PASS` -  your SourceForge password (not ssh)
 
 `SF_PROJECT` - SourceForge project name you want to upload to (For example: `orel6505-builds`)
+
+`SF_PATH` - (Optional, the default upload path `orel6505-builds/(codename)`, leave blink if you want to upload to the default path) different upload path for sourceforge (For example: `test` for uploading to test folder)
 
 `GD_PATH` - Gdrive upload path id (for example: `1-04oC14tCH6vPsaMd5_bRnfLWI9Te6hA`, you can found it after the url `https://drive.google.com/drive/folders/1-04oC14tCH6vPsaMd5_bRnfLWI9Te6hA`. DO NOT set in to: for example "Test" it WONT WORK.)
 
