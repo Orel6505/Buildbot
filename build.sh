@@ -4,6 +4,12 @@
 # Orel6505
 #
 
+## Directory
+MY_DIR=$(pwd)
+if ! [ -d "${MY_DIR}"/rom ]; then
+    mkdir "${MY_DIR}"/rom
+fi
+
 ## Sync
 sync() {
     if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}" ]; then
