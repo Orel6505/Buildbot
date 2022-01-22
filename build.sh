@@ -173,13 +173,13 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                             echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://sourceforge.net/projects/${SF_PROJECT}/files/${CODENAME}/"
                         fi
                     else
-                        sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${SF_PATH}
+                        sshpass -p "${SF_PASS}" scp "${ROM_ZIP}" "${SF_USER}"@frs.sourceforge.net:/home/frs/project/"${SF_PROJECT}"/"${SF_PATH}"
                         if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                            sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${SF_PATH}
+                            sshpass -p "${SF_PASS}" scp "${RECOVERY_IMG}" "${SF_USER}"@frs.sourceforge.net:/home/frs/project/"${SF_PROJECT}"/"${SF_PATH}"
                         fi
                         if [ "${TG_CHAT}" != "" ]; then
 			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
-sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
                         else
                             echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/"
                         fi
@@ -197,9 +197,9 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                         cp "${RECOVERY_IMG}" "${GDRIVE_FOLDER}"
                     fi
                     cd "${GD_FOLDER}"
-                    ./gdrive upload "${ROM_ZIP}" --parent ${GD_PATH} --share --delete
+                    ./gdrive upload "${ROM_ZIP}" --parent "${GD_PATH}" --share --delete
                     if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                        ./gdrive upload "${RECOVERY_IMG}" --parent ${GD_PATH} --share --delete
+                        ./gdrive upload "${RECOVERY_IMG}" --parent "${GD_PATH}" --share --delete
                     fi
                     if [ "${TG_CHAT}" != "" ]; then
                         curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
