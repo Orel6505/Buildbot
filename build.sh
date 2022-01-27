@@ -6,53 +6,122 @@
 # SPDX-License-Identifier: GNU General Public License v3.0
 #
 
-## Directory
-MY_DIR=$(pwd)
-if ! [ -d "${MY_DIR}"/rom ]; then
-    mkdir "${MY_DIR}"/rom
+if ! [ -e "buildbot_log.txt" ]; then
+    cat > buildbot_log.txt
+fi
+echo -e "---------beginning of log" > buildbot_log.txt
+
+## Check if the config is valid
+CONFIG_KNOX=0
+if [ "${ROM_NAME}" = "" ] && [ "${ANDROID_VERSION}" = "" ] && [ "${REPO_URL}" = "" ] && [ "${REPO_BRANCH}" = "" ] && [ "${DEVICE_CODENAME}" = "" ] && [ "${LUNCH_NAME}" = "" ] && [ "${BACON_NAME}" = "" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") F: please run config.sh instead of running build.sh, exiting..." >> buildbot_log.txt
+    return 1
+fi
+
+if [ "${ROM_NAME}" = "" ] || [ "${ANDROID_VERSION}" = "" ] || [ "${REPO_URL}" = "" ] || [ "${REPO_BRANCH}" = "" ] || [ "${DEVICE_CODENAME}" = "" ] || [ "${LUNCH_NAME}" = "" ] || [ "${BACON_NAME}" = "" ]; then
+    if [ "${ROM_NAME}" = "" ]; then
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: ROM_NAME is requierd in config" >> buildbot_log.txt
+        CONFIG_KNOX="$((${CONFIG_KNOX} + 1))"
+    fi
+    if [ "${ANDROID_VERSION}" = "" ]; then
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: ANDROID_VERSION is requierd in config" >> buildbot_log.txt
+        CONFIG_KNOX="$((${CONFIG_KNOX} + 1))"
+    fi
+    if [ "${REPO_URL}" = "" ]; then
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: REPO_URL is requierd in config" >> buildbot_log.txt
+        CONFIG_KNOX="$((${CONFIG_KNOX} + 1))"
+    fi
+    if [ "${REPO_BRANCH}" = "" ]; then
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: REPO_BRANCH is requierd in config" >> buildbot_log.txt
+        CONFIG_KNOX="$((${CONFIG_KNOX} + 1))"
+    fi
+    if [ "${DEVICE_CODENAME}" = "" ]; then
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: DEVICE_CODENAME is requierd in config" >> buildbot_log.txt
+        CONFIG_KNOX="$((${CONFIG_KNOX} + 1))"
+    fi
+    if [ "${LUNCH_NAME}" = "" ]; then
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: LUNCH_NAME is requierd in config" >> buildbot_log.txt
+        CONFIG_KNOX="$((${CONFIG_KNOX} + 1))"
+    fi
+    if [ "${BACON_NAME}" = "" ]; then
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: BACON_NAME is requierd in config" >> buildbot_log.txt
+        CONFIG_KNOX="$((${CONFIG_KNOX} + 1))"
+    fi
+fi
+
+if [ "${UPLOAD_TYPE}" = "GD" ] && [ "${GD_PATH}" = "" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GD_PATH is not set, uploading to generic location" >> buildbot_log.txt
+fi
+if [ "${UPLOAD_TYPE}" = "GH" ] && [ "${GH_REPO}" = "" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_REPO is not set, the script will no able to upload builds" >> buildbot_log.txt
+    UPLOAD_TYPE="OFF"
+fi
+if [ "${UPLOAD_TYPE}" = "GH" ] && [ "${GH_USERNAME}" = "" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_USERNAME is not set, the script will no able to upload builds" >> buildbot_log.txt
+    UPLOAD_TYPE="OFF"
+fi
+if [ "${UPLOAD_TYPE}" = "SF" ] && [ "${SF_USER}" = "" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_USER is not set, the script will no able to upload builds" >> buildbot_log.txt
+    UPLOAD_TYPE="OFF"
+fi
+if [ "${UPLOAD_TYPE}" = "SF" ] && [ "${SF_PASS}" = "" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_PASS is not set, the script will no able to upload builds" >> buildbot_log.txt
+    UPLOAD_TYPE="OFF"
+fi
+if [ "${UPLOAD_TYPE}" = "SF" ] && [ "${SF_PROJECT}" = "" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_PROJECT is not set, the script will no able to upload builds" >> buildbot_log.txt
+    UPLOAD_TYPE="OFF"
 fi
 
 ## Sync
 sync() {
     if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}" ]; then
         mkdir "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: rom/${ROM_NAME}-${ANDROID_VERSION} directory created " >> buildbot_log.txt
     fi
     cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
     START_REPO=$(date +"%s")
     repo init -u "${REPO_URL}" -b "${REPO_BRANCH}" --depth=1
-    if [ "${MANIFEST_URL}" != "" ]; then
-        if [ -d ".repo/local_manifests" ]; then
-            rm -fr ".repo/local_manifests"
-        fi
-        git clone "${MANIFEST_URL}" -b "${MANIFEST_BRANCH}" .repo/local_manifests --depth=1
-    else
-        echo "warning: you started to sync ${ROM_NAME}-${ANDROID_VERSION} without device tree manifest" 
-        echo "this can may stop the build later..."
-    fi
-    if [ "${TG_CHAT}" != "" ]; then
-        curl -s --data parse_mode=HTML --data text="Started to sync ${ROM_NAME}-${ANDROID_VERSION}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
-    else 
-        echo "Started to sync ${ROM_NAME}-${ANDROID_VERSION}!"
-    fi
-    repo sync --force-sync --no-tags --no-clone-bundle
-    if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ]; then 
-        END_REPO=$(date +"%s")
-        DIFF_REPO=$((END_REPO-START_REPO))
-        if [ "${TG_CHAT}" != "" ]; then
-            curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} Sync failed in $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!
-"${TG_USERNAME}" don't be lazy and open your build machine for errors" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
-        else
-            echo "Sync failed in $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!"
-        fi
+    REPO_INIT_STATUS=${?}
+    if [ ${MANIFEST_STATUS} != 0 ]; then
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: REPO_URL link is broken, repo manifest not cloned. exiting..." >> buildbot_log.txt
         return 1
     else
-        END_REPO=$(date +"%s")
-        DIFF_REPO=$((END_REPO-START_REPO))
-        if [ "${TG_CHAT}" != "" ]; then
-            curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} source synced successfully! It's took $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot$TG_TOKEN/sendMessage 
-            curl -s --data parse_mode=HTML --data text="The sync succedded, Starting to build..." --data chat_id=$TG_CHAT --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+        if [ "${MANIFEST_URL}" != "" ]; then
+            if [ -d ".repo/local_manifests" ]; then
+                rm -fr ".repo/local_manifests"
+            fi
+            git clone "${MANIFEST_URL}" -b "${MANIFEST_BRANCH}" .repo/local_manifests --depth=1
+            MANIFEST_STATUS=${?}
+            if [ ${MANIFEST_STATUS} != 0 ]; then
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: MANIFEST_URL link is broken, manifest not cloned..." >> buildbot_log.txt
+            fi
         else
-            echo "The sync succedded, Starting to build..." 
+            echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: you started to sync ${ROM_NAME}-${ANDROID_VERSION} without device tree manifest, which can the build machine may not able to start the build later" >> buildbot_log.txt
+        fi
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to sync ${ROM_NAME}-${ANDROID_VERSION}!" >> buildbot_log.txt
+        if [ "${TG_CHAT}" != "" ]; then
+            curl -s --data parse_mode=HTML --data text="Started to sync ${ROM_NAME}-${ANDROID_VERSION}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+        fi
+        repo sync --force-sync --no-tags --no-clone-bundle
+        REPO_SYNC_STATUS=${?}
+        if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ] && [ ${REPO_SYNC_STATUS} == 0 ]; then 
+            END_REPO=$(date +"%s")
+            DIFF_REPO=$((END_REPO-START_REPO))
+            if [ "${TG_CHAT}" != "" ]; then
+                curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} Sync failed in $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!
+"${TG_USERNAME}" don't be lazy and open your build machine for errors" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+            fi
+            echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: Sync ${ROM_NAME}-${ANDROID_VERSION} done unsuccessfully, exiting..." >> buildbot_log.txt
+            return 1
+        else
+            END_REPO=$(date +"%s")
+            DIFF_REPO=$((END_REPO-START_REPO))
+            echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Sync ${ROM_NAME}-${ANDROID_VERSION} done successfully, starting to build..." >> buildbot_log.txt
+            if [ "${TG_CHAT}" != "" ]; then
+                curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} source synced successfully! It's took $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot$TG_TOKEN/sendMessage 
+                curl -s --data parse_mode=HTML --data text="The sync succedded, Starting to build..." --data chat_id=$TG_CHAT --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+            fi
         fi
     fi
 }
@@ -65,6 +134,7 @@ build() {
     for CODENAME in ${DEVICE_CODENAME}
     do
         if [ "${AUTO_BRINGUP}" == "Y" ] || [ "${AUTO_BRINGUP}" == "yes" ] || [ "${AUTO_BRINGUP}" == "Yes" ]; then
+            echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to bringup device tree for ${CODENAME}!" >> buildbot_log.txt
             VENDOR_NAME="$(find . ~ -type d -name "${CODENAME}" | sort -nr | awk 'NR==1,NR==1')"
             VENDOR_NAME="$(dirname $VENDOR_NAME)"
             VENDOR_NAME="$(basename $VENDOR_NAME)"
@@ -80,6 +150,7 @@ build() {
             mv ${PREBUILT_LUNCH}_${CODENAME}.mk ${LUNCH_NAME}_${CODENAME}.mk
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
         fi
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: lunch for ${CODENAME} started!"  >> buildbot_log.txt
         lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug
         LUNCH_STATUS=${?}&&START_BUILD=$(date +"%s")
         if [ "${LUNCH_STATUS}" != 0 ]; then
@@ -88,22 +159,20 @@ build() {
             if [ "${TG_CHAT}" != "" ]; then
 	            curl -s --data parse_mode=HTML --data text="lunch for ${CODENAME} failed.
 "${TG_USERNAME}" don't be lazy and open your build machine for errors" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
-                if [ "${AUTO_BRINGUP}" == "Y" ] || [ "${AUTO_BRINGUP}" == "yes" ] || [ "${AUTO_BRINGUP}" == "Yes" ]; then
-                    curl -s --data parse_mode=HTML --data text="Please dm @Orel6505 on telegram and send him terminal log" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
-                fi
-            else
-                echo "lunch for ${CODENAME} failed."
-                if [ "${AUTO_BRINGUP}" == "Y" ] || [ "${AUTO_BRINGUP}" == "yes" ] || [ "${AUTO_BRINGUP}" == "Yes" ]; then
-                    echo "Please dm @Orel6505 and send him terminal log"
-                fi
             fi
-            return 1
+            if [ "${AUTO_BRINGUP}" == "Y" ] || [ "${AUTO_BRINGUP}" == "yes" ] || [ "${AUTO_BRINGUP}" == "Yes" ]; then
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: bringup device tree for ${CODENAME} failed!" >> buildbot_log.txt
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") F: lunch for ${CODENAME} failed." >> buildbot_log.txt
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Please dm @Orel6505 and send him terminal log and tell him to fix auto bringup" >> buildbot_log.txt
+            else
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") F: lunch for ${CODENAME} failed." >> buildbot_log.txt
+            fi
+            break 1
         else
             if [ "${TG_CHAT}" != "" ]; then
                 curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} Build for ${CODENAME} started!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
-            else
-                echo "Build for ${CODENAME} started!"
             fi
+            echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: build for ${CODENAME} started!"  >> buildbot_log.txt
             make ${BACON_NAME}
             BUILD_STATUS=${?}
             if [ "${BUILD_STATUS}" != 0 ]; then
@@ -113,18 +182,16 @@ build() {
 	                curl -s --data parse_mode=HTML --data text="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} failed in $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!
 "${TG_USERNAME}" don't be lazy and open your build machine for errors" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
                     curl -F document=@out/error.log --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument?chat_id="${TG_CHAT}"
-                else
-                    echo "Build for ${CODENAME} failed."
                 fi
-                return 1
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: build for ${CODENAME} failed."  >> buildbot_log.txt
+                break 1
             else
                 END_BUILD=$(date +"%s")
 	            DIFF_BUILD=$((END_BUILD-START_BUILD))
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: build for ${CODENAME} done successfully!"  >> buildbot_log.txt
                 if [ "${TG_CHAT}" != "" ]; then
                     curl -s --data parse_mode=HTML --data text="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} succeed!
 The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
-                else
-                    echo "${ROM_NAME} for ${CODENAME} succeed!"
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
                 ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2}')
@@ -146,42 +213,43 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                         cp "${RECOVERY_IMG}" "${MY_DIR}"/"${GH_REPO}"
                     fi
                     cd "${MY_DIR}"/"${GH_REPO}"
-                    if ! [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                    if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to github"  >> buildbot_log.txt
                         gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${RECOVERY_IMG}"
                         rm "${RECOVERY_IMG}"
                     else
+                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to github"  >> buildbot_log.txt
                         gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}"
                     fi
                     if [ "${TG_CHAT}" != "" ]; then
                         curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
 sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
-                    else
-                        echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}"
                     fi
+                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Upload ${ROM_ZIP} for ${CODENAME} done successfully!"  >> buildbot_log.txt 
                 fi
 
                 #if sourceforge release
                 if [ "${UPLOAD_TYPE}" == "SF" ]; then
                     if [ "${SF_PATH}" == "" ]; then
+                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to SourceForge"  >> buildbot_log.txt
 			            sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
                         if [ "${UPLOAD_RECOVERY}" = "true" ]; then
                             sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
                         fi
                         if [ "${TG_CHAT}" != "" ]; then
 			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
-                        else
-                            echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://sourceforge.net/projects/${SF_PROJECT}/files/${CODENAME}/"
                         fi
+                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to SourceForge done successfully"  >> buildbot_log.txt
                     else
+                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to SourceForge"  >> buildbot_log.txt
                         sshpass -p "${SF_PASS}" scp "${ROM_ZIP}" "${SF_USER}"@frs.sourceforge.net:/home/frs/project/"${SF_PROJECT}"/"${SF_PATH}"
                         if [ "${UPLOAD_RECOVERY}" = "true" ]; then
                             sshpass -p "${SF_PASS}" scp "${RECOVERY_IMG}" "${SF_USER}"@frs.sourceforge.net:/home/frs/project/"${SF_PROJECT}"/"${SF_PATH}"
                         fi
+                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to SourceForge done successfully"  >> buildbot_log.txt
                         if [ "${TG_CHAT}" != "" ]; then
 			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
 sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
-                        else
-                            echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/"
                         fi
                     fi
                 fi
@@ -197,15 +265,15 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                         cp "${RECOVERY_IMG}" "${GDRIVE_FOLDER}"
                     fi
                     cd "${GD_FOLDER}"
+                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to Gdrive"  >> buildbot_log.txt
                     ./gdrive upload "${ROM_ZIP}" --parent "${GD_PATH}" --share --delete
                     if [ "${UPLOAD_RECOVERY}" = "true" ]; then
                         ./gdrive upload "${RECOVERY_IMG}" --parent "${GD_PATH}" --share --delete
                     fi
+                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to Gdrive done successfully"  >> buildbot_log.txt
                     if [ "${TG_CHAT}" != "" ]; then
                         curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
 sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
-                    else
-                        echo "Upload ${ROM_ZIP} for ${CODENAME} succeed! https://drive.google.com/drive/folders/${GD_PATH}"
                     fi
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
@@ -213,6 +281,18 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
         fi
     done
 }
+
+## KNOX config check
+if [ CONFIG_KNOX != "0" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") F: exiting from ${CONFIG_KNOX} previous errors">> buildbot_log.txt
+    return 1
+fi
+
+## Directory
+MY_DIR=$(pwd)
+if ! [ -d "${MY_DIR}"/rom ]; then
+    mkdir "${MY_DIR}"/rom
+fi
 
 ## Start
 if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ]; then
