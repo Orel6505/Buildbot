@@ -283,7 +283,7 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
 }
 
 ## KNOX config check
-if [ CONFIG_KNOX != "0" ]; then
+if [ "${CONFIG_KNOX}" != "0" ]; then
     echo -e "$(date +"%Y-%m-%d") $(date +"%T") F: exiting from ${CONFIG_KNOX} previous errors">> buildbot_log.txt
     return 1
 fi
