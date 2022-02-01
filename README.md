@@ -81,8 +81,6 @@ See `https://github.com/Orel6505/local_manifests` for guide
 
 `GH_REPO` - your Github releases repo (you can use any repo for releases)
 
-`TG_USERNAME` - your Telegram username (for Example `@Orel6505`)
-
 `TG_TOKEN` - your Telegram bot token (for Example `123456:AbcDefGhi-JklMnoPrw`)
 
 `TG_CHAT` - your Telegram group id (add `@missrose_bot` to your group and send `/id` to see your group id)

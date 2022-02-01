@@ -99,16 +99,15 @@ sync() {
         fi
         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to sync ${ROM_NAME}-${ANDROID_VERSION}!" >> buildbot_log.txt
         if [ "${TG_CHAT}" != "" ]; then
-            curl -s --data parse_mode=HTML --data text="Started to sync ${ROM_NAME}-${ANDROID_VERSION}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+            curl -s --data parse_mode=HTML --data text="Started to sync ${ROM_NAME}-${ANDROID_VERSION}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
         fi
-        repo sync --force-sync --no-tags --no-clone-bundle
+        repo sync --force-sync --no-tags --no-clone-bundle | sync.log
         REPO_SYNC_STATUS=${?}
         if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ] && [ ${REPO_SYNC_STATUS} == 0 ]; then 
             END_REPO=$(date +"%s")
             DIFF_REPO=$((END_REPO-START_REPO))
             if [ "${TG_CHAT}" != "" ]; then
-                curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} Sync failed in $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!
-"${TG_USERNAME}" don't be lazy and open your build machine for errors" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+                curl -F chat_id="${TG_CHAT}" -F document=@sync.log -F caption="${ROM_NAME}-${ANDROID_VERSION} Sync failed in $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument 2>&1 >/dev/null
             fi
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: Sync ${ROM_NAME}-${ANDROID_VERSION} done unsuccessfully, exiting..." >> "${MY_DIR}"/buildbot_log.txt
             return 1
@@ -117,8 +116,8 @@ sync() {
             DIFF_REPO=$((END_REPO-START_REPO))
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Sync ${ROM_NAME}-${ANDROID_VERSION} done successfully, starting to build..." >> "${MY_DIR}"/buildbot_log.txt
             if [ "${TG_CHAT}" != "" ]; then
-                curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} source synced successfully! It's took $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot$TG_TOKEN/sendMessage 
-                curl -s --data parse_mode=HTML --data text="The sync succedded, Starting to build..." --data chat_id=$TG_CHAT --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+                curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} source synced successfully! It's took $((DIFF_REPO / 3600)) hours, $((DIFF_REPO % 3600 / 60)) minutes and $((DIFF_REPO % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot$TG_TOKEN/sendMessage 2>&1 >/dev/null
+                curl -s --data parse_mode=HTML --data text="The sync succedded, Starting to build..." --data chat_id=$TG_CHAT --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
             fi
         fi
     fi
@@ -149,14 +148,13 @@ build() {
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
         fi
         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: lunch for ${CODENAME} started!"  >> "${MY_DIR}"/buildbot_log.txt
-        lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug
+        lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug | tee lunch.log
         LUNCH_STATUS=${?}&&START_BUILD=$(date +"%s")
         if [ "${LUNCH_STATUS}" != 0 ]; then
 	        END_BUILD=$(date +"%s")
 	        DIFF_BUILD=$((END_BUILD-START_BUILD))
             if [ "${TG_CHAT}" != "" ]; then
-	            curl -s --data parse_mode=HTML --data text="lunch for ${CODENAME} failed.
-"${TG_USERNAME}" don't be lazy and open your build machine for errors" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+                curl -F document=@lunch.log -F caption="lunch for ${CODENAME} failed." --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument?chat_id="${TG_CHAT}" 2>&1 >/dev/null
             fi
             if [ "${AUTO_BRINGUP}" == "Y" ] || [ "${AUTO_BRINGUP}" == "yes" ] || [ "${AUTO_BRINGUP}" == "Yes" ]; then
                 echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: bringup device tree for ${CODENAME} failed!" >> "${MY_DIR}"/buildbot_log.txt
@@ -168,18 +166,18 @@ build() {
             break 1
         else
             if [ "${TG_CHAT}" != "" ]; then
-                curl -s --data parse_mode=HTML --data text="${ROM_NAME}-${ANDROID_VERSION} Build for ${CODENAME} started!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+                curl -s --data parse_mode=HTML --data text="<b> Build started for ${CODENAME} </b> <code> $(cat lunch.log) </code>" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
             fi
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: build for ${CODENAME} started!"  >> "${MY_DIR}"/buildbot_log.txt
-            make ${BACON_NAME}
+            make ${BACON_NAME} | tee build.log
             BUILD_STATUS=${?}
             if [ "${BUILD_STATUS}" != 0 ]; then
 	            END_BUILD=$(date +"%s")
 	            DIFF_BUILD=$((END_BUILD-START_BUILD))
-                if [ "${TG_CHAT}" != "" ]; then
-	                curl -s --data parse_mode=HTML --data text="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} failed in $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!
-"${TG_USERNAME}" don't be lazy and open your build machine for errors" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
-                    curl -F document=@out/error.log --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument?chat_id="${TG_CHAT}"
+                if ! [ -e out/error.log ] && [ "${TG_CHAT}" != "" ]; then
+                    curl -F chat_id="${TG_CHAT}" -F document=build.log -F caption="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} failed in $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument 2>&1 >/dev/null
+                elif [ "${TG_CHAT}" != "" ]; then
+                    curl -F chat_id="${TG_CHAT}" -F document=@out/error.log -F caption="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} failed in $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument 2>&1 >/dev/null
                 fi
                 echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: build for ${CODENAME} failed."  >> "${MY_DIR}"/buildbot_log.txt
                 break 1
@@ -189,7 +187,7 @@ build() {
                 echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: build for ${CODENAME} done successfully!"  >> "${MY_DIR}"/buildbot_log.txt
                 if [ "${TG_CHAT}" != "" ]; then
                     curl -s --data parse_mode=HTML --data text="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} succeed!
-The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 
+The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
                 ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2}')
@@ -221,7 +219,7 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                     fi
                     if [ "${TG_CHAT}" != "" ]; then
                         curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
-sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
                     echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Upload ${ROM_ZIP} for ${CODENAME} done successfully!"  >> "${MY_DIR}"/buildbot_log.txt 
                 fi
@@ -235,7 +233,7 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                             sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
                         fi
                         if [ "${TG_CHAT}" != "" ]; then
-			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                         fi
                         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to SourceForge done successfully"  >> "${MY_DIR}"/buildbot_log.txt
                     else
@@ -246,8 +244,7 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                         fi
                         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to SourceForge done successfully"  >> "${MY_DIR}"/buildbot_log.txt
                         if [ "${TG_CHAT}" != "" ]; then
-			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
-sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                         fi
                     fi
                 fi
@@ -271,7 +268,7 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                     echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to Gdrive done successfully"  >> "${MY_DIR}"/buildbot_log.txt
                     if [ "${TG_CHAT}" != "" ]; then
                         curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
-sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage
+sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"

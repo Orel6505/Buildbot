@@ -40,7 +40,6 @@ SF_PROJECT=""
 SF_PATH=""
 
 #Telegram - Optional
-TG_USERNAME=""
 TG_TOKEN=""
 TG_CHAT=""
 
