@@ -24,7 +24,7 @@ BACON_NAME=""
 #Upload stuff - Optional
 UPLOAD_TYPE=""
 UPLOAD_RECOVERY=""
-BUILD_TYPE=""
+TG_USER=""
 
 #Google Drive - Optional
 GD_PATH=""

@@ -191,7 +191,9 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
                 ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2}')
-                ROM_ZIP=$(basename $ROM_ZIP)
+                ROM_ZIP=$(basename "${ROM_ZIP}")
+                ROM_SIZE=$(ls -lh "${ROM_ZIP}" | cut -f5 -d " ")
+                ROM_DATE=
                 ROM_HASH=$(sha256sum "${ROM_ZIP}" | cut -f1 -d " ")
                 if [ -e recovery.img ] && [ "${UPLOAD_RECOVERY}" = "true" ]; then
                     RECOVERY_IMG="recovery.img"
@@ -218,8 +220,15 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                         gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}"
                     fi
                     if [ "${TG_CHAT}" != "" ]; then
-                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
-sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                        curl -s --data parse_mode=HTML --data text="📱 <b>New build available for ${CODENAME}</b>
+👤 by ${TG_USER}
+
+ℹ️ ROM: <code>${ROM_NAME}</code>
+🔸 Android version: <code>${ANDROID_VERSION} </code>
+📅 Build date: <code>$(date +"%d-%m-%Y")</code>
+📎 File size: <code>${ROM_SIZE}</code>
+✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
                     echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Upload ${ROM_ZIP} for ${CODENAME} done successfully!"  >> "${MY_DIR}"/buildbot_log.txt 
                 fi
@@ -233,7 +242,15 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                             sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
                         fi
                         if [ "${TG_CHAT}" != "" ]; then
-			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/p/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                            curl -s --data parse_mode=HTML --data text="📱 <b>New build available for ${CODENAME}</b>
+👤 by ${TG_USER}
+
+ℹ️ ROM: <code>${ROM_NAME}</code>
+🔸 Android version: <code>${ANDROID_VERSION} </code>
+📅 Build date: <code>$(date +"%d-%m-%Y")</code>
+📎 File size: <code>${ROM_SIZE}</code>
+✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                         fi
                         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to SourceForge done successfully"  >> "${MY_DIR}"/buildbot_log.txt
                     else
@@ -244,7 +261,15 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                         fi
                         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to SourceForge done successfully"  >> "${MY_DIR}"/buildbot_log.txt
                         if [ "${TG_CHAT}" != "" ]; then
-			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                            curl -s --data parse_mode=HTML --data text="📱 <b>New build available for ${CODENAME}</b>
+👤 by ${TG_USER}
+
+ℹ️ ROM: <code>${ROM_NAME}</code>
+🔸 Android version: <code>${ANDROID_VERSION} </code>
+📅 Build date: <code>$(date +"%d-%m-%Y")</code>
+📎 File size: <code>${ROM_SIZE}</code>
+✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                         fi
                     fi
                 fi
@@ -267,8 +292,15 @@ sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Do
                     fi
                     echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to Gdrive done successfully"  >> "${MY_DIR}"/buildbot_log.txt
                     if [ "${TG_CHAT}" != "" ]; then
-                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!
-sha256: ${ROM_HASH}" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                        curl -s --data parse_mode=HTML --data text="📱 <b>New build available for ${CODENAME}</b>
+👤 by ${TG_USER}
+
+ℹ️ ROM: <code>${ROM_NAME}</code>
+🔸 Android version: <code>${ANDROID_VERSION} </code>
+📅 Build date: <code>$(date +"%d-%m-%Y")</code>
+📎 File size: <code>${ROM_SIZE}</code>
+✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
