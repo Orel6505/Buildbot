@@ -101,7 +101,7 @@ sync() {
         if [ "${TG_CHAT}" != "" ]; then
             curl -s --data parse_mode=HTML --data text="Started to sync ${ROM_NAME}-${ANDROID_VERSION}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
         fi
-        repo sync --force-sync --no-tags --no-clone-bundle | tee sync.log
+        repo sync --force-sync --no-tags --no-clone-bundle 2<&1 | tee sync.log
         REPO_SYNC_STATUS=${?}
         if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ] && [ ${REPO_SYNC_STATUS} != 0 ]; then 
             END_REPO=$(date +"%s")
@@ -172,14 +172,12 @@ build() {
 <code>$(cat lunch.log)</code>" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
             fi
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: build for ${CODENAME} started!"  >> "${MY_DIR}"/buildbot_log.txt
-            make ${BACON_NAME} 2<&1 | tee build.log
+            make ${BACON_NAME}
             BUILD_STATUS=${?}
             if [ "${BUILD_STATUS}" != 0 ]; then
 	            END_BUILD=$(date +"%s")
 	            DIFF_BUILD=$((END_BUILD-START_BUILD))
-                if ! [ -e out/error.log ] && [ "${TG_CHAT}" != "" ]; then
-                    curl -F chat_id="${TG_CHAT}" -F document=build.log -F caption="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} failed in $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument 2>&1 >/dev/null
-                elif [ "${TG_CHAT}" != "" ]; then
+                if [ "${TG_CHAT}" != "" ]; then
                     curl -F chat_id="${TG_CHAT}" -F document=@out/error.log -F caption="The ${ROM_NAME}-${ANDROID_VERSION} build for ${CODENAME} failed in $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument 2>&1 >/dev/null
                 fi
                 echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: build for ${CODENAME} failed."  >> "${MY_DIR}"/buildbot_log.txt
