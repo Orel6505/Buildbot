@@ -148,9 +148,9 @@ build() {
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
         fi
         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: lunch for ${CODENAME} started!"  >> "${MY_DIR}"/buildbot_log.txt
-        lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug | tee lunch.log
-        LUNCH_STATUS=${?}&&START_BUILD=$(date +"%s")
-        if [ "${LUNCH_STATUS}" != 0 ]; then
+        lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug 2<&1 | tee lunch.log
+        START_BUILD=$(date +"%s")
+        if grep -q "error" lunch.log; then
 	        END_BUILD=$(date +"%s")
 	        DIFF_BUILD=$((END_BUILD-START_BUILD))
             if [ "${TG_CHAT}" != "" ]; then
@@ -165,11 +165,14 @@ build() {
             fi
             break 1
         else
+            sed -i "/Trying dependencies-only mode on a/c\ " lunch.log
+            sed -i '/^\s*$/d' lunch.log
             if [ "${TG_CHAT}" != "" ]; then
-                curl -s --data parse_mode=HTML --data text="<b> Build started for ${CODENAME} </b> <code> $(cat lunch.log) </code>" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
+<code>$(cat lunch.log)</code>" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
             fi
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: build for ${CODENAME} started!"  >> "${MY_DIR}"/buildbot_log.txt
-            make ${BACON_NAME} | tee build.log
+            make ${BACON_NAME} 2<&1 | tee build.log
             BUILD_STATUS=${?}
             if [ "${BUILD_STATUS}" != 0 ]; then
 	            END_BUILD=$(date +"%s")
