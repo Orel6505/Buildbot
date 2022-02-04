@@ -148,7 +148,7 @@ build() {
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
         fi
         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: lunch for ${CODENAME} started!"  >> "${MY_DIR}"/buildbot_log.txt
-        lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug 2<&1 | tee lunch.log
+        lunch "${LUNCH_NAME}"_"${CODENAME}"-userdebug > lunch.log
         START_BUILD=$(date +"%s")
         if grep -q "error" lunch.log; then
 	        END_BUILD=$(date +"%s")
