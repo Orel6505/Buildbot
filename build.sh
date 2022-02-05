@@ -191,10 +191,18 @@ build() {
 The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes and $((DIFF_BUILD % 60)) seconds!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"
-                ROM_ZIP=$(find -type f -name "*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2}')
+                ROM_ZIP=$(find -type f -name "*${CODENAME}*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2}')
                 ROM_ZIP=$(basename "${ROM_ZIP}")
+                ROM_ZIP_KNOX="0x1"
+                while [ "${ROM_ZIP_KNOX}" == "0x1" ]; do
+                    KNOX_TMP1= $(grep -q "eng" "${ROM_ZIP}")
+                    if [ "${KNOX_TMP1}" == "" ]; then
+                        ROM_ZIP_KNOX="0x0"
+                    else
+                        ROM_ZIP=$(find -type f -name "*${CODENAME}*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==2,NR==2 {print $2}')
+                    fi
+                done
                 ROM_SIZE=$(ls -lh "${ROM_ZIP}" | cut -f5 -d " ")
-                ROM_DATE=
                 ROM_HASH=$(sha256sum "${ROM_ZIP}" | cut -f1 -d " ")
                 if [ -e recovery.img ] && [ "${UPLOAD_RECOVERY}" = "true" ]; then
                     RECOVERY_IMG="recovery.img"
