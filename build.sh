@@ -312,6 +312,27 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
 ✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
                 fi
+
+                #if FTP
+                if [ "${UPLOAD_TYPE}" == "FTP" ]; then
+                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to FTP server"  >> "${MY_DIR}"/buildbot_log.txt
+                    curl --ssl -k --user "${FTP_USER}":"${FTP_PASS}" -T "${ROM_ZIP}" ftp://"${FTP_UPLOAD_URL}"
+                    if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                        curl --ssl -k --user "${FTP_USER}":"${FTP_PASS}" -T "${RECOVERY_IMG}" ftp://"${FTP_UPLOAD_URL}"
+                    fi
+                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to FTP server done successfully"  >> "${MY_DIR}"/buildbot_log.txt
+                    if [ "${TG_CHAT}" != "" ]; then
+			            curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                        curl -s --data parse_mode=HTML --data text="📱 <b>New build available for ${CODENAME}</b>
+👤 by ${TG_USER}
+
+ℹ️ ROM: <code>${ROM_NAME}</code>
+🔸 Android version: <code>${ANDROID_VERSION} </code>
+📅 Build date: <code>$(date +"%d-%m-%Y")</code>
+📎 File size: <code>${ROM_SIZE}</code>
+✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                    fi
+                fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
             fi
         fi

@@ -39,6 +39,11 @@ SF_PASS=""
 SF_PROJECT=""
 SF_PATH=""
 
+#FTP - Optional
+FTP_USER=""
+FTP_PASS=""
+FTP_UPLOAD_URL=""
+
 #Telegram - Optional
 TG_TOKEN=""
 TG_CHAT=""

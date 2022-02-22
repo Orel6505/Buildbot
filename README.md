@@ -61,7 +61,7 @@ See `https://github.com/Orel6505/local_manifests` for guide
 
 `BACON_NAME` - ROM's custom bacon name (For example: most of the roms using `bacon`)
 
-`UPLOAD_TYPE` -`GD` for Gdrive, `GH` for Github and `OFF` for disable upload
+`UPLOAD_TYPE` -`GD` for Gdrive, `SF` for SourceForge `FTP` for FTP, `GH` for Github and `OFF` for disable upload
 
 `UPLOAD_RECOVERY` - Do you want to upload recovery.img?
 
