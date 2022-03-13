@@ -130,7 +130,7 @@ build() {
     source build/envsetup.sh
     for CODENAME in ${DEVICE_CODENAME}
     do
-        if [ "${AUTO_BRINGUP}" == "Y" ] || [ "${AUTO_BRINGUP}" == "yes" ] || [ "${AUTO_BRINGUP}" == "Yes" ]; then
+        if [ "${AUTO_ADAPT}" == "Y" ] || [ "${AUTO_ADAPT}" == "yes" ] || [ "${AUTO_ADAPT}" == "Yes" ]; then
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to bringup device tree for ${CODENAME}!" >> "${MY_DIR}"/buildbot_log.txt
             VENDOR_NAME="$(find . ~ -type d -name "${CODENAME}" | sort -nr | awk 'NR==1,NR==1')"
             VENDOR_NAME="$(dirname $VENDOR_NAME)"
@@ -156,10 +156,10 @@ build() {
             if [ "${TG_CHAT}" != "" ]; then
                 curl -F document=@lunch.log -F caption="lunch for ${CODENAME} failed." --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendDocument?chat_id="${TG_CHAT}" 2>&1 >/dev/null
             fi
-            if [ "${AUTO_BRINGUP}" == "Y" ] || [ "${AUTO_BRINGUP}" == "yes" ] || [ "${AUTO_BRINGUP}" == "Yes" ]; then
-                echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: bringup device tree for ${CODENAME} failed!" >> "${MY_DIR}"/buildbot_log.txt
+            if [ "${AUTO_ADAPT}" == "Y" ] || [ "${AUTO_ADAPT}" == "yes" ] || [ "${AUTO_ADAPT}" == "Yes" ]; then
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: Adapt device tree for ${CODENAME} failed!" >> "${MY_DIR}"/buildbot_log.txt
                 echo -e "$(date +"%Y-%m-%d") $(date +"%T") F: lunch for ${CODENAME} failed." >> "${MY_DIR}"/buildbot_log.txt
-                echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Please dm @Orel6505 and send him terminal log and tell him to fix auto bringup" >> "${MY_DIR}"/buildbot_log.txt
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Please dm @Orel6505 and send him terminal log and tell him to fix auto adapt" >> "${MY_DIR}"/buildbot_log.txt
             else
                 echo -e "$(date +"%Y-%m-%d") $(date +"%T") F: lunch for ${CODENAME} failed." >> "${MY_DIR}"/buildbot_log.txt
             fi
