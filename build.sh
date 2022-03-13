@@ -194,12 +194,13 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                 ROM_ZIP=$(find -type f -name "*${CODENAME}*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==1,NR==1 {print $2}')
                 ROM_ZIP=$(basename "${ROM_ZIP}")
                 ROM_ZIP_KNOX="0x1"
+                ENG_KNOX="1"
                 while [ "${ROM_ZIP_KNOX}" == "0x1" ]; do
-                    KNOX_TMP1= $(grep -q "eng" "${ROM_ZIP}")
-                    if [ "${KNOX_TMP1}" == "" ]; then
+                    if ! [[ "${ROM_ZIP}" == *"eng"* ]]; then
                         ROM_ZIP_KNOX="0x0"
                     else
-                        ROM_ZIP=$(find -type f -name "*${CODENAME}*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk 'NR==2,NR==2 {print $2}')
+                        ROM_ZIP=$(find -type f -name "*${CODENAME}*.zip" -exec stat -c '%Y %n' {} \; | sort -nr | head -n 20 | awk '{print $2}' NR=="${ENG_KNOX}",NR=="${ENG_KNOX}")
+                        ENG_KNOX=$(expr "${ENG_KNOX}" + 1)
                     fi
                 done
                 ROM_SIZE=$(ls -lh "${ROM_ZIP}" | cut -f5 -d " ")
