@@ -30,8 +30,10 @@ TG_USER=""
 GD_PATH=""
 
 #Github Releases - Optional
-GH_USERNAME=""
-GH_REPO=""
+GH_USER=""
+GH_TOKEN=""
+GH_REPO_URL=""
+CREATE_OTA_JSON="" #Beta
 
 #SourceForge - Optional
 SF_USER=""

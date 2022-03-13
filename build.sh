@@ -54,8 +54,8 @@ if [ "${UPLOAD_TYPE}" = "GH" ] && [ "${GH_REPO}" = "" ]; then
     echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_REPO is not set, the script will no able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
     UPLOAD_TYPE="OFF"
 fi
-if [ "${UPLOAD_TYPE}" = "GH" ] && [ "${GH_USERNAME}" = "" ]; then
-    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_USERNAME is not set, the script will no able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
+if [ "${UPLOAD_TYPE}" = "GH" ] && [ "${GH_USER}" = "" ]; then
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_USER is not set, the script will no able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
     UPLOAD_TYPE="OFF"
 fi
 if [ "${UPLOAD_TYPE}" = "SF" ] && [ "${SF_USER}" = "" ]; then
@@ -206,27 +206,81 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                 ROM_HASH=$(sha256sum "${ROM_ZIP}" | cut -f1 -d " ")
                 if [ -e recovery.img ] && [ "${UPLOAD_RECOVERY}" = "true" ]; then
                     RECOVERY_IMG="recovery.img"
+                    RECOVERY_HASH=$(sha256sum "${RECOVERY_IMG}" | cut -f1 -d " ")
                 fi
 
-                #if github release
+                #if Github release
                 if [ "${UPLOAD_TYPE}" == "GH" ]; then
-                    GH_RELEASE="${BUILD_TYPE}"-"${ROM_ZIP}"
+                    GH_TAG="${ROM_NAME}-${ANDROID_VERSION}-${CODENAME}-$(date +"%Y-%m-%d")"
+                    GH_NAME=$(echo "${GH_PUSH_URL}" | cut -f4 -d "/")
+                    GH_REPO=$(echo "${GH_PUSH_URL}" | cut -f5 -d "/")
+                    GH_PUSH_URL="https://"${GH_USER}":"${GH_TOKEN}"@github.com/${GH_NAME}/${GH_REPO}"
+                    if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                        GH_RELEASE_NOTES="rom sha256: ${ROM_HASH}
+recovery sha256: ${RECOVERY_HASH}"
+                    else
+                        GH_RELEASE_NOTES="sha256: ${ROM_HASH}"
+                    fi
                     if ! [ -d "${MY_DIR}"/"${GH_REPO}" ]; then
-                        git clone https://github.com/"${GH_USERNAME}"/"${GH_REPO}" "${MY_DIR}"
+                        git clone "${GH_REPO_URL}".git "${MY_DIR}"
                     fi
                     cp "${ROM_ZIP}" "${MY_DIR}"/"${GH_REPO}"
-                    cp "${ROM_HASH}" "${MY_DIR}"/"${GH_REPO}"
-                    if [ "${UPLOAD_RECOVERY}" = "true" ]; then
+                    if [ "${UPLOAD_RECOVERY}" == "true" ]; then
                         cp "${RECOVERY_IMG}" "${MY_DIR}"/"${GH_REPO}"
                     fi
                     cd "${MY_DIR}"/"${GH_REPO}"
+                    if [ "${CREATE_OTA_JSON}" == "true" ]; then
+                        METADATA=$(unzip -p "${ROM_ZIP}" META-INF/com/android/metadata)
+                        SDK_LEVEL=$(echo "${METADATA}" | grep post-sdk-level | cut -f2 -d '=')
+                        TIMESTAMP=$(echo "${METADATA}" | grep post-timestamp | cut -f2 -d '=')
+                        ROM_SIZE_BYTES=$(ls -lh "${ROM_ZIP}" | cut -f5 -d " ")
+                        KNOX_OFFICIAL=1
+                        until [ ${KNOX_OFFICIAL} -gt 7 ]; do 
+                            KNOX_TMP2=$(echo "${ROM_ZIP}" | cut -f"${KNOX_OFFICIAL}" -d '-')
+                            if grep -q "OFFICIAL" .KNOX_OFFICIAL; then
+                                KNOX_OFFICIAL="OFFICIAL"
+                                break 1
+                            else
+                                KNOX_OFFICIAL=$(expr "${KNOX_OFFICIAL}" + 1)
+                            fi
+                        done
+                        rm .KNOX_OFFICIAL
+                        if [ ${KNOX_OFFICIAL} == "7" ]; then
+                            KNOX_OFFICIAL="UNOFFICIAL"
+                        fi
+                        echo "{" > "${CODENAME}".json
+                        echo "  \"response\": [" >> "${CODENAME}".json
+                        echo "    {" >> "${CODENAME}".json
+                        echo "      \"datetime\": \"${TIMESTAMP}\"," >> "${CODENAME}".json
+                        echo "      \"filename\": \"${ROM_ZIP}\"," >> "${CODENAME}".json
+                        echo "      \"id\": \"${ROM_HASH}\"," >> "${CODENAME}".json
+                        if ! [[ *"${ROM_NAME}"* == "crDroid" ]]; then
+                            echo "      \"romtype\": \"${KNOX_OFFICIAL}\"," >> "${CODENAME}".json
+                        fi
+                        echo "      \"size\": \"${ROM_SIZE_BYTES}\"," >> "${CODENAME}".json
+                        echo "      \"url\": \"${GH_URL}\"," >> "${CODENAME}".json
+                        echo "      \"version\": \"${REPO_BRANCH}\"" >> "${CODENAME}".json
+                        echo "    }" >> "${CODENAME}".json
+                        echo "  ]" >> "${CODENAME}".json
+                        echo "}" >> "${CODENAME}".json
+                        git add ${CODENAME}.json
+                        git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
+                    fi
+                    git tag "${GH_TAG}"
+                    git push --repo="${GH_PUSH_URL}"
+                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to Github"  >> "${MY_DIR}"/buildbot_log.txt
                     if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to github"  >> "${MY_DIR}"/buildbot_log.txt
-                        gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}" "${RECOVERY_IMG}"
-                        rm "${RECOVERY_IMG}"
+                        if [ "${CREATE_OTA_JSON}" = "true" ]; then
+                            gh release create "${GH_TAG}" -t "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")" -n "${GH_RELEASE_NOTES}" "${ROM_ZIP}" "${RECOVERY_IMG}"
+                        else
+                            gh release create "${GH_TAG}" -t "${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")" -n "${GH_RELEASE_NOTES}" "${ROM_ZIP}" "${RECOVERY_IMG}"
+                        fi
                     else
-                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to github"  >> "${MY_DIR}"/buildbot_log.txt
-                        gh release create "${GH_RELEASE}" -t "${GH_RELEASE}" "${ROM_ZIP}"
+                        if [ "${CREATE_OTA_JSON}" = "true" ]; then
+                            gh release create "${GH_TAG}" -t "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")" -n "${GH_RELEASE_NOTES}" "${ROM_ZIP}"
+                        else
+                            gh release create "${GH_TAG}" -t "${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")" -n "${GH_RELEASE_NOTES}" "${ROM_ZIP}"
+                        fi
                     fi
                     if [ "${TG_CHAT}" != "" ]; then
                         curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
@@ -237,9 +291,13 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
 🔸 Android version: <code>${ANDROID_VERSION} </code>
 📅 Build date: <code>$(date +"%d-%m-%Y")</code>
 📎 File size: <code>${ROM_SIZE}</code>
-✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USERNAME}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USER}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
-                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Upload ${ROM_ZIP} for ${CODENAME} done successfully!"  >> "${MY_DIR}"/buildbot_log.txt 
+                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Upload ${ROM_ZIP} for ${CODENAME} done successfully!"  >> "${MY_DIR}"/buildbot_log.txt
+                    rm "${ROM_ZIP}"
+                    if [ "${UPLOAD_RECOVERY}" == "true" ]; then
+                        rm "${RECOVERY_IMG}"
+                    fi
                 fi
 
                 #if sourceforge release
