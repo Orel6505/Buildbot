@@ -4,7 +4,7 @@ Android Building Script - Script that can build for multiple devices
 Please read the whole README before forking this repo
 
 # DISCLAIMER
-* This script is only for Linux Debian-based operating system.
+* This script is only for Debian, Arch and fedora Linux based operating system.
 * DO NOT use this script if you never built Android before
 * I am not responsible for anything that may happen to your PC/phone by building/flashing
 any custom ROMs using this script. (Bricked devices, dead SD cards, dead hard drives, CPU overheating,
@@ -30,9 +30,9 @@ done what we told you to do.
 
 1. Clone your fork of this repository.
 
-2. Make your changes in `config.sh`.
+2. run `setup.sh` even if you already built Android on your PC before.
 
-3. run `first_time.sh` even if you already built Android on your PC before.
+3. Make your changes in `config.sh`.
 
 4. run `config.sh` to start the script.
 
