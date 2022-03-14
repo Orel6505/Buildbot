@@ -223,7 +223,7 @@ recovery sha256: ${RECOVERY_HASH}"
                         GH_RELEASE_NOTES="sha256: ${ROM_HASH}"
                     fi
                     if ! [ -d "${MY_DIR}"/"${GH_REPO}" ]; then
-                        git clone "${GH_REPO_URL}".git "${MY_DIR}"
+                        git clone "${GH_REPO_URL}" "${MY_DIR}"
                     fi
                     cp "${ROM_ZIP}" "${MY_DIR}"/"${GH_REPO}"
                     if [ "${UPLOAD_RECOVERY}" == "true" ]; then
