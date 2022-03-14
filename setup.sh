@@ -36,7 +36,8 @@ if [[ "${OS_NAME}" == *"Arch"* ]] || [[ "${OS_NAME2}" == *"Arch"* ]]; then
     pacman -S coreutils sshpass
     git clone https://aur.archlinux.org/lineageos-devel
     cd lineageos-devel
-    makepkg -si --skippgpcheck --noconfirm --needed
+    DEFAULT_USER=$(who | cut -f1 -d " ")
+    sudo -u "${DEFAULT_USER}" makepkg -si --skippgpcheck --noconfirm --needed
     cd ..
     rm -rf lineageos-devel
     mkdir ~/bin
