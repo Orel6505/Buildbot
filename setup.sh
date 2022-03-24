@@ -34,12 +34,14 @@ if [[ "${OS_NAME}" == *"Arch"* ]] || [[ "${OS_NAME2}" == *"Arch"* ]]; then
     sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
     sudo pacman -Syyu --noconfirm --needed multilib-devel
     pacman -S coreutils sshpass
-    git clone https://aur.archlinux.org/lineageos-devel
-    cd lineageos-devel
     DEFAULT_USER=$(who | cut -f1 -d " ")
-    su "${DEFAULT_USER}" -c "makepkg -si --skippgpcheck --noconfirm --needed"
-    cd ..
-    rm -rf lineageos-devel
+    for PACKAGE in "aosp-devel lineageos-devel xml2 ffmpeg imagemagick lzop ninja gradle maven"; do
+        git clone https://aur.archlinux.org/"${PACKAGE}"
+        cd "${PACKAGE}"
+        su "${DEFAULT_USER}" -c "makepkg -si --skippgpcheck --noconfirm --needed"
+        cd ..
+        rm -rf "${PACKAGE}"
+    done
     mkdir ~/bin
     curl http://commondatastorage.googleapis.com/git-repo-downloads/repo > ~/bin/repo 
     chmod a+x ~/bin/repo
