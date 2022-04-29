@@ -168,8 +168,16 @@ build() {
             sed -i "/Trying dependencies-only mode on a/c\ " lunch.log
             sed -i '/^\s*$/d' lunch.log
             if [ "${TG_CHAT}" != "" ]; then
-                curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
-<code>$(cat lunch.log)</code>" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                if [ "${TG_USER}" != "" ]; then
+                    curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
+ℹ️ ROM: <code>${ROM_NAME}</code>
+🔸 Android version: <code>${ANDROID_VERSION} </code>
+👤 Builder: <code>${TG_USER}</code>" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                else
+                    curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
+ℹ️ ROM: <code>${ROM_NAME}</code>
+🔸 Android version: <code>${ANDROID_VERSION} </code>" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+                fi
             fi
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: build for ${CODENAME} started!"  >> "${MY_DIR}"/buildbot_log.txt
             make ${BACON_NAME}
