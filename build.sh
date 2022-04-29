@@ -131,7 +131,7 @@ build() {
     for CODENAME in ${DEVICE_CODENAME}
     do
         if [ "${AUTO_ADAPT}" == "Y" ] || [ "${AUTO_ADAPT}" == "yes" ] || [ "${AUTO_ADAPT}" == "Yes" ]; then
-            echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to bringup device tree for ${CODENAME}!" >> "${MY_DIR}"/buildbot_log.txt
+            echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to adapt device tree for ${CODENAME}!" >> "${MY_DIR}"/buildbot_log.txt
             VENDOR_NAME="$(find . ~ -type d -name "${CODENAME}" | sort -nr | awk 'NR==1,NR==1')"
             VENDOR_NAME="$(dirname $VENDOR_NAME)"
             VENDOR_NAME="$(basename $VENDOR_NAME)"
