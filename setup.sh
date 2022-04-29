@@ -30,6 +30,10 @@ if [[ "${OS_NAME}" == *"ubuntu"* ]] || [[ "${OS_NAME2}" == *"ubuntu"* ]]; then
     fi
 fi
 
+if [[ "${OS_NAME}" == *"Debian"* ]] || [[ "${OS_NAME2}" == *"Debian"* ]] || [[ "${OS_DISTRO}" == *"Debian"* ]]; then
+    sudo apt install git repo adb fastboot curl openssh-client sshpass -y bc bison build-essential flex g++-multilib gcc-multilib gnupg gperf imagemagick lib32ncurses5-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 libxml2-utils lunzip lzop pngcrush schedtool squashfs-tools xsltproc zip zlib1g-dev openjdk-8-jdk python perl git git-lfs libncurses5 xmlstarlet virtualenv xz-utils rr jq ruby gem ccache libssl-dev ucommon-utils
+fi
+
 if [[ "${OS_NAME}" == *"Arch"* ]] || [[ "${OS_NAME2}" == *"Arch"* ]]; then
     sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
     sudo pacman -Syyu --noconfirm --needed multilib-devel
