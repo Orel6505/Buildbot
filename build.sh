@@ -8,6 +8,22 @@
 
 MY_DIR=$(pwd)
 echo -e "---------beginning of log" > "${MY_DIR}"/buildbot_log.txt
+if [ "${OTA_JSON}" == "true" ]; then
+    MAINTAINERS_A=$(echo $MAINTAINERS | sed 's/ /,/g' | sed 's/&/ /g' | sed 's/,//g')
+    MAINTAINER_COUNT=0
+    for MAINTAINER in $MAINTAINERS_A
+    do
+        MAINTAINER_COUNT=$(expr "${MAINTAINER_COUNT}" + 1)
+    done
+fi
+if [ "${OTA_JSON}" == "true" ] || [ "${UPLOAD_TYPE}" == "GH" ]; then
+    GH_NAME=$(echo "${GH_REPO_URL}" | cut -f4 -d "/")
+    GH_REPO=$(echo "${GH_REPO_URL}" | cut -f5 -d "/")
+    GH_PUSH_URL="https://"${GH_USER}":"${GH_TOKEN}"@github.com/${GH_NAME}/${GH_REPO}"
+fi
+if [ "${OTA_JSON}" == "true" ] && [[ *"${OTA_LIKE}"* == "crDroid" ]]; then 
+    TG_URL="https://t.me/${TG_USER}"
+fi
 
 ## Check if the config is valid
 CONFIG_KNOX=0
@@ -51,23 +67,23 @@ if [ "${UPLOAD_TYPE}" = "GD" ] && [ "${GD_PATH}" = "" ]; then
     echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GD_PATH is not set, uploading to generic location" >> "${MY_DIR}"/buildbot_log.txt
 fi
 if [ "${UPLOAD_TYPE}" = "GH" ] && [ "${GH_REPO}" = "" ]; then
-    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_REPO is not set, the script will no able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_REPO is not set, the script will not able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
     UPLOAD_TYPE="OFF"
 fi
 if [ "${UPLOAD_TYPE}" = "GH" ] && [ "${GH_USER}" = "" ]; then
-    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_USER is not set, the script will no able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: GH_USER is not set, the script will not able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
     UPLOAD_TYPE="OFF"
 fi
 if [ "${UPLOAD_TYPE}" = "SF" ] && [ "${SF_USER}" = "" ]; then
-    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_USER is not set, the script will no able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_USER is not set, the script will not able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
     UPLOAD_TYPE="OFF"
 fi
 if [ "${UPLOAD_TYPE}" = "SF" ] && [ "${SF_PASS}" = "" ]; then
-    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_PASS is not set, the script will no able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_PASS is not set, the script will not able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
     UPLOAD_TYPE="OFF"
 fi
 if [ "${UPLOAD_TYPE}" = "SF" ] && [ "${SF_PROJECT}" = "" ]; then
-    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_PROJECT is not set, the script will no able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
+    echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: SF_PROJECT is not set, the script will not able to upload builds" >> "${MY_DIR}"/buildbot_log.txt
     UPLOAD_TYPE="OFF"
 fi
 
@@ -212,71 +228,78 @@ The build took $((DIFF_BUILD / 3600)) hours, $((DIFF_BUILD % 3600 / 60)) minutes
                     fi
                 done
                 ROM_SIZE=$(ls -lh "${ROM_ZIP}" | cut -f5 -d " ")
-                ROM_HASH=$(sha256sum "${ROM_ZIP}" | cut -f1 -d " ")
+                ROM_SIZE_BYTES=$(ls -l "${ROM_ZIP}" | cut -f5 -d " ")
+                ROM_ID=$(sha256sum "${ROM_ZIP}" | cut -f1 -d " ")
+                ROM_HASH=$(md5sum "${ROM_ZIP}" | cut -f1 -d " ")
+                METADATA=$(unzip -p "${ROM_ZIP}" META-INF/com/android/metadata)
+                SDK_LEVEL=$(echo "${METADATA}" | grep post-sdk-level | cut -f2 -d '=')
+                TIMESTAMP=$(echo "${METADATA}" | grep post-timestamp | cut -f2 -d '=')
                 if [ -e recovery.img ] && [ "${UPLOAD_RECOVERY}" = "true" ]; then
                     RECOVERY_IMG="recovery.img"
                     RECOVERY_HASH=$(sha256sum "${RECOVERY_IMG}" | cut -f1 -d " ")
+                fi
+                if [ "${OTA_JSON}" == "true" ]; then
+                    if [ "${UPLOAD_TYPE}" = "GD" ]; then
+                        if [ "${CUSTOM_ROM_ZIP_DOWNLOAD_URL}" != "" ]; then
+                            URL="${CUSTOM_ROM_ZIP_DOWNLOAD_URL}"
+                        fi
+                    elif [ "${UPLOAD_TYPE}" = "GH" ]; then
+                        if [ "${CUSTOM_ROM_ZIP_DOWNLOAD_URL}" != "" ]; then
+                            URL="${CUSTOM_ROM_ZIP_DOWNLOAD_URL}"
+                        else
+                            URL="https://github.com/${GH_NAME}/${GH_REPO}/releases/download/${ROM_ZIP}/${ROM_ZIP}"
+                        fi
+                    elif [ "${UPLOAD_TYPE}" = "SF" ]; then
+                        if [ "${CUSTOM_ROM_ZIP_DOWNLOAD_URL}" != "" ]; then
+                            URL="${CUSTOM_ROM_ZIP_DOWNLOAD_URL}/${ROM_ZIP}"
+                        else
+                            if [ "${SF_PATH}" != "" ]; then
+                                URL="https://sourceforge.net/projects/${SF_PROJECT}/files/${CODNAME}/${SF_PATH}/${ROM_ZIP}/download"
+                            else
+                                URL="https://sourceforge.net/projects/${SF_PROJECT}/files/${CODNAME}/${ROM_NAME}-${ANDROID_VERSION}/${ROM_ZIP}/download"
+                            fi
+                        fi
+                    elif [ "${UPLOAD_TYPE}" = "FTP" ]; then
+                        URL="${CUSTOM_ROM_ZIP_DOWNLOAD_URL}"
+                    fi
+                    KNOX_OFFICIAL=1
+                    until [ ${KNOX_OFFICIAL} -gt 7 ]; do 
+                        KNOX_TMP2=$(echo "${ROM_ZIP}" | cut -f"${KNOX_OFFICIAL}" -d '-')
+                        if [[ *"${KNOX_TMP2}"* = "OFFICIAL" ]]; then
+                            KNOX_OFFICIAL="OFFICIAL"
+                            break 1
+                        else
+                            KNOX_OFFICIAL=$(expr "${KNOX_OFFICIAL}" + 1)
+                        fi
+                    done
+                    if [ ${KNOX_OFFICIAL} == "7" ]; then
+                        KNOX_OFFICIAL="UNOFFICIAL"
+                    fi
                 fi
 
                 #if Github release
                 if [ "${UPLOAD_TYPE}" == "GH" ]; then
                     GH_TAG="${ROM_NAME}-${ANDROID_VERSION}-${CODENAME}-$(date +"%Y-%m-%d")"
-                    GH_NAME=$(echo "${GH_PUSH_URL}" | cut -f4 -d "/")
-                    GH_REPO=$(echo "${GH_PUSH_URL}" | cut -f5 -d "/")
-                    GH_PUSH_URL="https://"${GH_USER}":"${GH_TOKEN}"@github.com/${GH_NAME}/${GH_REPO}"
                     if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                        GH_RELEASE_NOTES="rom sha256: ${ROM_HASH}
+                        GH_RELEASE_NOTES="rom sha256: ${ROM_ID}
 recovery sha256: ${RECOVERY_HASH}"
                     else
-                        GH_RELEASE_NOTES="sha256: ${ROM_HASH}"
+                        GH_RELEASE_NOTES="sha256: ${ROM_ID}"
                     fi
                     if ! [ -d "${MY_DIR}"/"${GH_REPO}" ]; then
-                        git clone "${GH_REPO_URL}" "${MY_DIR}"
+                        git clone "${GH_REPO_URL}" "${MY_DIR}"/"${GH_REPO}"
                     fi
-                    cp "${ROM_ZIP}" "${MY_DIR}"/"${GH_REPO}"
-                    if [ "${UPLOAD_RECOVERY}" == "true" ]; then
-                        cp "${RECOVERY_IMG}" "${MY_DIR}"/"${GH_REPO}"
+                    if ! [ -d "${MY_DIR}"/"${GH_REPO}"/"${ROM_ZIP}" ]; then
+                        cp "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"/"${ROM_ZIP}" "${MY_DIR}"/"${GH_REPO}"
+                        if ! [ -d "${MY_DIR}"/"${GH_REPO}"/"${RECOVERY_IMG}" ] && [ "${UPLOAD_RECOVERY}" == "true" ]; then
+                            cp "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"/"${RECOVERY_IMG}" "${MY_DIR}"/"${GH_REPO}"
+                        fi
                     fi
                     cd "${MY_DIR}"/"${GH_REPO}"
-                    if [ "${CREATE_OTA_JSON}" == "true" ]; then
-                        METADATA=$(unzip -p "${ROM_ZIP}" META-INF/com/android/metadata)
-                        SDK_LEVEL=$(echo "${METADATA}" | grep post-sdk-level | cut -f2 -d '=')
-                        TIMESTAMP=$(echo "${METADATA}" | grep post-timestamp | cut -f2 -d '=')
-                        ROM_SIZE_BYTES=$(ls -lh "${ROM_ZIP}" | cut -f5 -d " ")
-                        KNOX_OFFICIAL=1
-                        until [ ${KNOX_OFFICIAL} -gt 7 ]; do 
-                            KNOX_TMP2=$(echo "${ROM_ZIP}" | cut -f"${KNOX_OFFICIAL}" -d '-')
-                            if grep -q "OFFICIAL" .KNOX_OFFICIAL; then
-                                KNOX_OFFICIAL="OFFICIAL"
-                                break 1
-                            else
-                                KNOX_OFFICIAL=$(expr "${KNOX_OFFICIAL}" + 1)
-                            fi
-                        done
-                        rm .KNOX_OFFICIAL
-                        if [ ${KNOX_OFFICIAL} == "7" ]; then
-                            KNOX_OFFICIAL="UNOFFICIAL"
-                        fi
-                        echo "{" > "${CODENAME}".json
-                        echo "  \"response\": [" >> "${CODENAME}".json
-                        echo "    {" >> "${CODENAME}".json
-                        echo "      \"datetime\": \"${TIMESTAMP}\"," >> "${CODENAME}".json
-                        echo "      \"filename\": \"${ROM_ZIP}\"," >> "${CODENAME}".json
-                        echo "      \"id\": \"${ROM_HASH}\"," >> "${CODENAME}".json
-                        if ! [[ *"${ROM_NAME}"* == "crDroid" ]]; then
-                            echo "      \"romtype\": \"${KNOX_OFFICIAL}\"," >> "${CODENAME}".json
-                        fi
-                        echo "      \"size\": \"${ROM_SIZE_BYTES}\"," >> "${CODENAME}".json
-                        echo "      \"url\": \"${GH_URL}\"," >> "${CODENAME}".json
-                        echo "      \"version\": \"${REPO_BRANCH}\"" >> "${CODENAME}".json
-                        echo "    }" >> "${CODENAME}".json
-                        echo "  ]" >> "${CODENAME}".json
-                        echo "}" >> "${CODENAME}".json
-                        git add ${CODENAME}.json
-                        git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
+                    if ! [ $(git tag -l "${GH_TAG}") ]; then
+                        git tag "${GH_TAG}"
+                        git push --repo="${GH_PUSH_URL}" --tags
                     fi
-                    git tag "${GH_TAG}"
-                    git push --repo="${GH_PUSH_URL}"
                     echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to Github"  >> "${MY_DIR}"/buildbot_log.txt
                     if [ "${UPLOAD_RECOVERY}" = "true" ]; then
                         if [ "${CREATE_OTA_JSON}" = "true" ]; then
@@ -300,7 +323,7 @@ recovery sha256: ${RECOVERY_HASH}"
 🔸 Android version: <code>${ANDROID_VERSION} </code>
 📅 Build date: <code>$(date +"%d-%m-%Y")</code>
 📎 File size: <code>${ROM_SIZE}</code>
-✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USER}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+✅ SHA256: <code>${ROM_ID}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://github.com/${GH_USER}/${GH_REPO}/${GH_RELEASE}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
                     echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: Upload ${ROM_ZIP} for ${CODENAME} done successfully!"  >> "${MY_DIR}"/buildbot_log.txt
                     rm "${ROM_ZIP}"
@@ -313,9 +336,9 @@ recovery sha256: ${RECOVERY_HASH}"
                 if [ "${UPLOAD_TYPE}" == "SF" ]; then
                     if [ "${SF_PATH}" == "" ]; then
                         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to SourceForge"  >> "${MY_DIR}"/buildbot_log.txt
-			            sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
+			            sshpass -p "${SF_PASS}" scp ${ROM_ZIP} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}/${ROM_NAME}-${ANDROID_VERSION}
                         if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                            sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}
+                            sshpass -p "${SF_PASS}" scp ${RECOVERY_IMG} ${SF_USER}@frs.sourceforge.net:/home/frs/project/${SF_PROJECT}/${CODENAME}/${ROM_NAME}-${ANDROID_VERSION}
                         fi
                         if [ "${TG_CHAT}" != "" ]; then
 			                curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
@@ -326,7 +349,7 @@ recovery sha256: ${RECOVERY_HASH}"
 🔸 Android version: <code>${ANDROID_VERSION} </code>
 📅 Build date: <code>$(date +"%d-%m-%Y")</code>
 📎 File size: <code>${ROM_SIZE}</code>
-✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+✅ SHA256: <code>${ROM_ID}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${CODENAME}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                         fi
                         echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to SourceForge done successfully"  >> "${MY_DIR}"/buildbot_log.txt
                     else
@@ -345,7 +368,7 @@ recovery sha256: ${RECOVERY_HASH}"
 🔸 Android version: <code>${ANDROID_VERSION} </code>
 📅 Build date: <code>$(date +"%d-%m-%Y")</code>
 📎 File size: <code>${ROM_SIZE}</code>
-✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+✅ SHA256: <code>${ROM_ID}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                         fi
                     fi
                 fi
@@ -356,9 +379,9 @@ recovery sha256: ${RECOVERY_HASH}"
                     if ! [ -e "${GD_FOLDER}"/gdrive ]; then
                         echo "you didn't lisen to me, Please read README.md and run first_time.sh to set Gdrive"
                     fi
-                    cp "${ROM_ZIP}" "${GD_FOLDER}"
+                    cp "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"/"${ROM_ZIP}" "${GD_FOLDER}"
                     if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                        cp "${RECOVERY_IMG}" "${GDRIVE_FOLDER}"
+                        cp "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"/"${RECOVERY_IMG}" "${GDRIVE_FOLDER}"
                     fi
                     cd "${GD_FOLDER}"
                     echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to Gdrive"  >> "${MY_DIR}"/buildbot_log.txt
@@ -376,7 +399,7 @@ recovery sha256: ${RECOVERY_HASH}"
 🔸 Android version: <code>${ANDROID_VERSION} </code>
 📅 Build date: <code>$(date +"%d-%m-%Y")</code>
 📎 File size: <code>${ROM_SIZE}</code>
-✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+✅ SHA256: <code>${ROM_ID}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
                 fi
 
@@ -397,8 +420,83 @@ recovery sha256: ${RECOVERY_HASH}"
 🔸 Android version: <code>${ANDROID_VERSION} </code>
 📅 Build date: <code>$(date +"%d-%m-%Y")</code>
 📎 File size: <code>${ROM_SIZE}</code>
-✅ SHA256: <code>${HASH_ZIP}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
+✅ SHA256: <code>${ROM_ID}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://sourceforge.net/projects/${SF_PROJECT}/files/${SF_PATH}/\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
                     fi
+                fi
+
+                #if OTA
+                if [ "${OTA_JSON}" == "true" ]; then
+                    if ! [ -d "${MY_DIR}"/"${GH_REPO}" ]; then
+                        git clone "${GH_REPO_URL}" "${MY_DIR}"/"${GH_REPO}"
+                    fi
+                    cd "${MY_DIR}"/"${GH_REPO}"
+                    if [ "${OTA_LIKE}" = "lineage" ] || [ *"${OTA_LIKE}"* = "LOS" ]; then
+                        JSON_FORMAT='{\n  "response": [\n    {\n      "filename": "%s",\n      "id": "%s",\n      "size": "%s",\n      "datetime": "%s",\n      "url": "%s",\n      "version": "%s"\n    },\n  ]\n}'
+                        printf "${JSON_FORMAT}" "${ROM_ZIP}" "${ROM_ID}" "${ROM_SIZE_BYTES}" "${TIMESTAMP}" "${URL}" "${REPO_BRANCH}"  > ${CODENAME}.json
+                        git add ${CODENAME}.json
+                        git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
+                        git push --repo="${GH_PUSH_URL}"
+                    elif [ "${OTA_LIKE}" = "PE" ] || [ "${OTA_LIKE}" = "PixelExperience" ]; then
+                        JSON_FORMAT='{\n    "error": false,\n    "filename": "%s",\n    "filehash": "%s",\n    "id": "%s",\n    "datetime": "%s",\n    "size": "%s",\n'
+                        printf "${JSON_FORMAT}" "${ROM_ZIP}" "${ROM_HASH}" "${ROM_ID}" "${TIMESTAMP}" "${ROM_SIZE_BYTES}" > ${CODENAME}.json
+                        printf '    "maintainers": [\n' >> ${CODENAME}.json
+                        if [ "${MAINTAINER_COUNT}" != 1 ]; then
+                            TMP1=1
+                            for MAINTAINER in $MAINTAINERS_A; do
+                                GH_MAINTAINER=$(echo "${GH_MAINTAINERS}" | cut -d "&" -f"${TMP1}"  | sed 's/ //g')
+                                if [ "${TMP1}" = 1 ]; then
+                                    MAIN_MAINTAINER=true
+                                    printf '        {\n            "main_maintainer": %s,\n            "name": "%s",\n            "github_username": "%s",\n        }' "${MAIN_MAINTAINER}" "${MAINTAINER}" "${GH_MAINTAINER}" >> ${CODENAME}.json
+                                else
+                                    MAIN_MAINTAINER=false
+                                    printf '        {\n            "main_maintainer": %s,\n            "name": "%s",\n            "github_username": "%s",\n        }' "${MAIN_MAINTAINER}" "${MAINTAINER}" "${GH_MAINTAINER}" >> ${CODENAME}.json
+                                fi
+                                TMP1=$(expr "${TMP1}" + 1)
+                                if ! [ "${TMP1}" -gt  "${MAINTAINER_COUNT}" ]; then
+                                    printf ',\n' >> ${CODENAME}.json
+                                else
+                                    printf '\n' >> ${CODENAME}.json
+                                fi
+                            done
+                            printf '    ],\n' >> ${CODENAME}.json
+                        else
+                            MAIN_MAINTAINER=false
+                            GH_MAINTAINER=$(echo "${GH_MAINTAINERS}" | sed 's/ //g')
+                            printf '        {\n            "main_maintainer": %s,\n            "name": "%s",\n            "github_username": "%s",\n        }' "${MAIN_MAINTAINER}" "${MAINTAINER}" "${GH_MAINTAINER}" >> ${CODENAME}.json
+                            printf ',\n' >> ${CODENAME}.json
+                            printf '    ],\n' >> ${CODENAME}.json
+                        fi
+                        JSON_FORMAT='    "donate_url": "%s",\n    "news_url": "%s",\n    "url": "%s",\n    "version": "%s",\n    "website_url": "%s"\n}'
+                        printf "${JSON_FORMAT}" "${DONATE_URL}" "${NEWS_URL}" "${URL}" "${REPO_BRANCH}" "${WEBSITE_URL}" >> ${CODENAME}.json
+                        git add ${CODENAME}.json
+                        git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
+                        git push --repo="${GH_PUSH_URL}"
+                    elif [ "${OTA_LIKE}" = "crDroid" ] && [ "${ANDROID_VERSION}" = "12" ] || [ "${ANDROID_VERSION}" = "12.1" ]; then
+                        JSON_FORMAT='{\n  "response": [\n    {\n        "maintainer": "%s",\n        "filename": "%s",\n        "download": "%s",\n        "timestamp": "%s",\n        "md5": "%s",\n        "sha256": "%s",\n        "size": "%s",\n        "version": "%s",\n        "buildtype": "%s",\n        "forum": "%s",\n        "gapps": "%s",\n        "firmware": "%s",\n        "modem": "%s",\n        "bootloader": "%s",\n        "recovery": "%s",\n        "paypal": "%s",\n        "telegram": "%s",\n    }\n  ]\n}'
+                        printf "${JSON_FORMAT}" "${MAINTAINERS}" "${ROM_ZIP}" "${URL}" "${TIMESTAMP}" "${ROM_HASH}" "${ROM_ID}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${BUILD_TYPE}" "${XDA_TREAD}" "${GAPPS_URL}" "${FIRMWARE_URL}" "${MODAM_URL}" "${BOOTLOADER_URL}" "${RECOVERY_URL}" "${DONATE_URL}" "${TG_URL}" > ${CODENAME}.json
+                        git add ${CODENAME}.json
+                        git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
+                        git push --repo="${GH_PUSH_URL}"
+                    elif [ "${OTA_LIKE}" = "crDroid" ] && [ "${ANDROID_VERSION}" = "11" ]; then
+                        JSON_FORMAT='{\n  "response": [\n    {\n        "maintainer": "%s",\n        "filename": "%s",\n        "download": "%s",\n        "timestamp": "%s",\n        "md5": "%s",\n        "size": "%s",\n        "version": "%s",\n        "buildtype": "%s",\n        "forum": "%s",\n        "gapps": "%s",\n        "firmware": "%s",\n        "modem": "%s",\n        "bootloader": "%s",\n        "recovery": "%s",\n        "paypal": "%s",\n        "telegram": "%s",\n    }\n  ]\n}'
+                        printf "${JSON_FORMAT}" "${MAINTAINERS}" "${ROM_ZIP}" "${URL}" "${TIMESTAMP}" "${ROM_HASH}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${BUILD_TYPE}" "${XDA_TREAD}" "${GAPPS_URL}" "${FIRMWARE_URL}" "${MODAM_URL}" "${BOOTLOADER_URL}" "${RECOVERY_URL}" "${DONATE_URL}" "${TG_URL}" > ${CODENAME}.json
+                        git add ${CODENAME}.json
+                        git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
+                        git push --repo="${GH_PUSH_URL}"
+                    elif [ *"${OTA_LIKE}"* = "Evox" ] || [ "${OTA_LIKE}" = "Evolution" ]; then
+                        JSON_FORMAT='{\n  "error": false,\n  "filename": "%s",\n  "filehash": "%s",\n  "id": "%s",\n  "datetime":"%s",\n  "size": "%s",\n  "version": "%s",\n  "maintainer": "%s",\n  "telegram_username": "%s",\n  "url":, "%s",\n  "maintainer_url": "%s",\n  "news_url": "%s",\n  "forum_url": "%s",\n  "website_url": "%s",\n  "donate_url": "%s"\n}'
+                        printf "${JSON_FORMAT}" "${ROM_ZIP}" "${ROM_HASH}" "${ROM_ID}" "${TIMESTAMP}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${MAINTAINERS}" "${TG_USER}" "${URL}" "${MAINTAINER_URL}" "${NEWS_URL}" "${XDA_TREAD}" "${WEBSITE_URL}" "${DONATE_URL}" > ${CODENAME}.json
+                        git add ${CODENAME}.json
+                        git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
+                        git push --repo="${GH_PUSH_URL}"
+                    else
+                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: OTA: did you set something wrong?" >> "${MY_DIR}"/buildbot_log.txt
+                        echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: OTA: disabing OTA..." >> "${MY_DIR}"/buildbot_log.txt
+                        OTA_JSON="false"
+                    fi
+                fi
+                if [ -d "${MY_DIR}"/"${GH_REPO}" ]; then
+                    rm -fr "${MY_DIR}"/"${GH_REPO}"
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
             fi
