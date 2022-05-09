@@ -430,7 +430,7 @@ recovery sha256: ${RECOVERY_HASH}"
                         git clone "${GH_REPO_URL}" "${MY_DIR}"/"${GH_REPO}"
                     fi
                     cd "${MY_DIR}"/"${GH_REPO}"
-                    if [ "${OTA_LIKE}" = "lineage" ] || [ *"${OTA_LIKE}"* = "LOS" ]; then
+                    if [ "${OTA_LIKE}" = "lineage" ] || [ "${OTA_LIKE}" = "LOS" ]; then
                         JSON_FORMAT='{\n  "response": [\n    {\n      "filename": "%s",\n      "id": "%s",\n      "size": "%s",\n      "datetime": "%s",\n      "url": "%s",\n      "version": "%s"\n    },\n  ]\n}'
                         printf "${JSON_FORMAT}" "${ROM_ZIP}" "${ROM_ID}" "${ROM_SIZE_BYTES}" "${TIMESTAMP}" "${URL}" "${REPO_BRANCH}"  > ${CODENAME}.json
                         git add ${CODENAME}.json
@@ -471,7 +471,7 @@ recovery sha256: ${RECOVERY_HASH}"
                         git add ${CODENAME}.json
                         git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
                         git push --repo="${GH_PUSH_URL}"
-                    elif [ "${OTA_LIKE}" = "crDroid" ] && [ "${ANDROID_VERSION}" = "12" ] || [ "${ANDROID_VERSION}" = "12.1" ]; then
+                    elif [ "${OTA_LIKE}" = "crDroid" ] && [ "${ANDROID_VERSION}" = "12" ] || [ "${OTA_LIKE}" = "crDroid" ] && [ "${ANDROID_VERSION}" = "12.1" ]; then
                         JSON_FORMAT='{\n  "response": [\n    {\n        "maintainer": "%s",\n        "filename": "%s",\n        "download": "%s",\n        "timestamp": "%s",\n        "md5": "%s",\n        "sha256": "%s",\n        "size": "%s",\n        "version": "%s",\n        "buildtype": "%s",\n        "forum": "%s",\n        "gapps": "%s",\n        "firmware": "%s",\n        "modem": "%s",\n        "bootloader": "%s",\n        "recovery": "%s",\n        "paypal": "%s",\n        "telegram": "%s",\n    }\n  ]\n}'
                         printf "${JSON_FORMAT}" "${MAINTAINERS}" "${ROM_ZIP}" "${URL}" "${TIMESTAMP}" "${ROM_HASH}" "${ROM_ID}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${BUILD_TYPE}" "${XDA_TREAD}" "${GAPPS_URL}" "${FIRMWARE_URL}" "${MODAM_URL}" "${BOOTLOADER_URL}" "${RECOVERY_URL}" "${DONATE_URL}" "${TG_URL}" > ${CODENAME}.json
                         git add ${CODENAME}.json
@@ -483,7 +483,7 @@ recovery sha256: ${RECOVERY_HASH}"
                         git add ${CODENAME}.json
                         git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
                         git push --repo="${GH_PUSH_URL}"
-                    elif [ *"${OTA_LIKE}"* = "Evox" ] || [ "${OTA_LIKE}" = "Evolution" ]; then
+                    elif [ "${OTA_LIKE}" = "Evox" ] || [ "${OTA_LIKE}" = "Evolution" ]; then
                         JSON_FORMAT='{\n  "error": false,\n  "filename": "%s",\n  "filehash": "%s",\n  "id": "%s",\n  "datetime":"%s",\n  "size": "%s",\n  "version": "%s",\n  "maintainer": "%s",\n  "telegram_username": "%s",\n  "url":, "%s",\n  "maintainer_url": "%s",\n  "news_url": "%s",\n  "forum_url": "%s",\n  "website_url": "%s",\n  "donate_url": "%s"\n}'
                         printf "${JSON_FORMAT}" "${ROM_ZIP}" "${ROM_HASH}" "${ROM_ID}" "${TIMESTAMP}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${MAINTAINERS}" "${TG_USER}" "${URL}" "${MAINTAINER_URL}" "${NEWS_URL}" "${XDA_TREAD}" "${WEBSITE_URL}" "${DONATE_URL}" > ${CODENAME}.json
                         git add ${CODENAME}.json
