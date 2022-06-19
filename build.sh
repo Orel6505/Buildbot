@@ -108,12 +108,12 @@ sync() {
             git clone "${MANIFEST_URL}" -b "${MANIFEST_BRANCH}" .repo/local_manifests --depth=1
             MANIFEST_STATUS=${?}
             if [ "${MANIFEST_STATUS}" != "0" ]; then
-                echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: MANIFEST_URL link is broken, manifest not cloned..." >> buildbot_log.txt
+                echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: MANIFEST_URL link is broken, manifest not cloned..." >> "${MY_DIR}"/buildbot_log.txt
             fi
         else
-            echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: you started to sync ${ROM_NAME}-${ANDROID_VERSION} without device tree manifest, which can the build machine may not able to start the build later" >> buildbot_log.txt
+            echo -e "$(date +"%Y-%m-%d") $(date +"%T") W: you started to sync ${ROM_NAME}-${ANDROID_VERSION} without device tree manifest, which can the build machine may not able to start the build later" >> "${MY_DIR}"/buildbot_log.txt
         fi
-        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to sync ${ROM_NAME}-${ANDROID_VERSION}!" >> buildbot_log.txt
+        echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to sync ${ROM_NAME}-${ANDROID_VERSION}!" >> "${MY_DIR}"/buildbot_log.txt
         if [ "${TG_CHAT}" != "" ]; then
             curl -s --data parse_mode=HTML --data text="Started to sync ${ROM_NAME}-${ANDROID_VERSION}!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
         fi
