@@ -510,7 +510,7 @@ recovery sha256: ${RECOVERY_HASH}"
 }
 
 buildstatus() {
-    while [ "${BUILD_STATUS}" != "" ]; do
+    while [ "${BUILD_STATUS}" = "" ]; do
         STATUS_KNOX1=$(protoc --decode_raw < "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/build_progress.pb | cut -c 4- | head -1)
         STATUS_KNOX2=$(protoc --decode_raw < "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/build_progress.pb | cut -b 4-  | head -n 2 | tail -n 1)
         BUILD_PRECENT="$(echo "scale=2; $STATUS_KNOX2 / $STATUS_KNOX1*100" | bc)"
