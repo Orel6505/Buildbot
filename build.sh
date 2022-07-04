@@ -146,6 +146,7 @@ build() {
     source build/envsetup.sh
     for CODENAME in ${DEVICE_CODENAME}
     do
+        BUILD_STATUS=""
         if [ "${AUTO_ADAPT}" == "Y" ] || [ "${AUTO_ADAPT}" == "yes" ] || [ "${AUTO_ADAPT}" == "Yes" ]; then
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to adapt device tree for ${CODENAME}!" >> "${MY_DIR}"/buildbot_log.txt
             VENDOR_NAME="$(find . ~ -type d -name "${CODENAME}" | sort -nr | awk 'NR==1,NR==1')"
@@ -499,7 +500,7 @@ recovery sha256: ${RECOVERY_HASH}"
                         OTA_JSON="false"
                     fi
                 fi
-                if [ -d "${MY_DIR}"/"${GH_REPO}" ]; then
+                if ! [ -z "${GH_REPO}" ] && [ -d "${MY_DIR}"/"${GH_REPO}" ]; then
                     rm -fr "${MY_DIR}"/"${GH_REPO}"
                 fi
                 cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
@@ -509,9 +510,9 @@ recovery sha256: ${RECOVERY_HASH}"
 }
 
 buildstatus() {
-    while true; do
-        STATUS_KNOX1=$(protoc --decode_raw < "${MY_DIR}"/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/build_progress.pb | cut -c 4- | head -1)
-        STATUS_KNOX2=$(protoc --decode_raw < "${MY_DIR}"/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/build_progress.pb | cut -b 4-  | head -n 2 | tail -n 1)
+    while [ "${BUILD_STATUS}" != "" ]; do
+        STATUS_KNOX1=$(protoc --decode_raw < "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/build_progress.pb | cut -c 4- | head -1)
+        STATUS_KNOX2=$(protoc --decode_raw < "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/build_progress.pb | cut -b 4-  | head -n 2 | tail -n 1)
         BUILD_PRECENT="$(echo "scale=2; $STATUS_KNOX2 / $STATUS_KNOX1*100" | bc)"
         if [ "${TG_USER}" != "" ]; then
             curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
@@ -525,7 +526,7 @@ Build Status: ${BUILD_PRECENT}" --data message_id=${BUILD_MESSAGE} --data chat_i
 🔸 Android version: <code>${ANDROID_VERSION}</code>
 Build Status: ${BUILD_PRECENT}" --data message_id=${BUILD_MESSAGE} --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/editMessageText 2>&1 >/dev/null
         fi
-        if [ -s out/error.log ] || [ "${BUILD_STATUS}" != 0 ]; then
+        if [ -s out/error.log ] || [ "${BUILD_STATUS}" != 0 ] && [ "${BUILD_STATUS}" != "" ]; then
             if [ "${TG_USER}" != "" ]; then
                 curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
@@ -540,7 +541,7 @@ Build Status: <b>Build Failed</b>" --data message_id=${BUILD_MESSAGE} --data cha
             fi
             break
         fi
-        if [ "${STATUS_KNOX1}" = "${STATUS_KNOX2}" ]; then
+        if [ "${STATUS_KNOX1}" = "${STATUS_KNOX2}" ] && [ "${BUILD_STATUS}" = 0 ]; then
             if [ "${TG_USER}" != "" ]; then
                curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
