@@ -199,12 +199,12 @@ Build Status: Build Started" --data chat_id="${TG_CHAT}" --request POST https://
                 fi
             fi
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: build for ${CODENAME} started!"  >> "${MY_DIR}"/buildbot_log.txt
-            if [ "${TG_USER}" != "" ]; then
+            if [ "${TG_CHAT}" != "" ]; then
                 buildstatus &
             fi
             make ${BACON_NAME}
             BUILD_STATUS=${?}
-            if [ "${TG_USER}" != "" ]; then
+            if [ "${TG_CHAT}" != "" ]; then
                 wait
             fi
             if [ "${BUILD_STATUS}" != 0 ]; then
@@ -533,28 +533,32 @@ Build Status: ${BUILD_PRECENT}" --data message_id=${BUILD_MESSAGE} --data chat_i
         sleep 3m
     done
     if [ -s out/error.log ] || [ "${BUILD_STATUS}" != 0 ] && [ "${BUILD_STATUS}" != "" ]; then
-        curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
+        if [ "${TG_CHAT}" != "" ]; then
+            curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
 🔸 Android version: <code>${ANDROID_VERSION} </code>
 👤 Builder: <code>${TG_USER}</code>
 Build Status: <b>Build Failed</b>" --data message_id=${BUILD_MESSAGE} --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/editMessageText 2>&1 >/dev/null
-    else
-        curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
+        else
+            curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
 🔸 Android version: <code>${ANDROID_VERSION}</code>
 Build Status: <b>Build Failed</b>" --data message_id=${BUILD_MESSAGE} --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/editMessageText 2>&1 >/dev/null
+        fi
     fi
     if [ "${STATUS_KNOX1}" = "${STATUS_KNOX2}" ] && [ "${BUILD_STATUS}" = 0 ]; then
-        curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
+        if [ "${TG_CHAT}" != "" ]; then
+            curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
 🔸 Android version: <code>${ANDROID_VERSION} </code>
 👤 Builder: <code>${TG_USER}</code>
 Build Status: <b>Build Success</b>" --data message_id=${BUILD_MESSAGE} --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/editMessageText 2>&1 >/dev/null
-    else
-        curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
+        else
+            curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
 🔸 Android version: <code>${ANDROID_VERSION}</code>
 Build Status: <b>Build Success</b>" --data message_id=${BUILD_MESSAGE} --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/editMessageText 2>&1 >/dev/null
+        fi
     fi
 }
 
