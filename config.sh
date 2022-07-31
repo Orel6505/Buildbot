@@ -7,7 +7,7 @@
 #
 
 ## Need To Fill
-#Sync - Requierd
+#Sync - Required
 ROM_NAME=""
 ANDROID_VERSION=""
 REPO_URL=""
@@ -15,7 +15,7 @@ REPO_BRANCH=""
 MANIFEST_URL=""
 MANIFEST_BRANCH=""
 
-#Build - Requierd 
+#Build - Required
 DEVICE_CODENAME=""
 AUTO_ADAPT=""
 LUNCH_NAME=""
@@ -33,19 +33,19 @@ GD_PATH=""
 GH_USER=""
 GH_TOKEN=""
 GH_REPO_URL=""
-OTA_JSON="" 
+OTA_JSON=""
 OTA_LIKE="" #LOS/PE/crDroid/Evox
 CUSTOM_ROM_ZIP_DOWNLOAD_URL="" #Mainly for FTP and gdrive users
-MAINTAINERS="" #PE and Evox specific 
-XDA_TREAD="" #PE and Evox specific 
-DONATE_URL="" #PE and Evox specific 
-NEWS_URL="" #PE and Evox specific 
-WEBSITE_URL="" #PE and Evox specific 
+MAINTAINERS="" #PE and Evox specific
+XDA_TREAD="" #PE and Evox specific
+DONATE_URL="" #PE and Evox specific
+NEWS_URL="" #PE and Evox specific
+WEBSITE_URL="" #PE and Evox specific
 GH_MAINTAINERS="" #for PixelExperience only
 MAINTAINER_URL="" #evox specific
 BUILD_TYPE="" #crDroid specific
 FIRMWARE_URL="" #crDroid specific
-MODAM_URL="" #crDroid specific
+MODEM_URL="" #crDroid specific
 BOOTLOADER_URL="" #crDroid specific
 RECOVERY_URL="" #crDroid specific
 
