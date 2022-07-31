@@ -21,7 +21,7 @@ if [ "${OTA_JSON}" == "true" ] || [ "${UPLOAD_TYPE}" == "GH" ]; then
     GH_REPO=$(echo "${GH_REPO_URL}" | cut -f5 -d "/")
     GH_PUSH_URL="https://"${GH_USER}":"${GH_TOKEN}"@github.com/${GH_NAME}/${GH_REPO}"
 fi
-if [ "${OTA_JSON}" == "true" ] && [[ *"${OTA_LIKE}"* == "crDroid" ]]; then 
+if [ "${OTA_JSON}" == "true" ] && [[ *"${OTA_LIKE}"* == "crDroid" ]]; then
     TG_URL="https://t.me/${TG_USER}"
 fi
 
@@ -119,7 +119,7 @@ sync() {
         fi
         repo sync --force-sync --no-tags --no-clone-bundle 2<&1 | tee sync.log
         REPO_SYNC_STATUS=${?}
-        if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ] && [ ${REPO_SYNC_STATUS} != 0 ]; then 
+        if ! [ -d "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}/bootable" ] && [ ${REPO_SYNC_STATUS} != 0 ]; then
             END_REPO=$(date +"%s")
             DIFF_REPO=$((END_REPO-START_REPO))
             if [ "${TG_CHAT}" != "" ]; then
@@ -139,7 +139,7 @@ sync() {
     fi
 }
 
-## Build 
+## Build
 build() {
     cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
     repo sync --force-sync --no-tags --no-clone-bundle
@@ -486,13 +486,13 @@ recovery sha256: ${RECOVERY_HASH}"
                         git push --repo="${GH_PUSH_URL}"
                     elif [ "${OTA_LIKE}" = "crDroid" ] && [ "${ANDROID_VERSION}" = "12" ] || [ "${OTA_LIKE}" = "crDroid" ] && [ "${ANDROID_VERSION}" = "12.1" ]; then
                         JSON_FORMAT='{\n  "response": [\n    {\n        "maintainer": "%s",\n        "filename": "%s",\n        "download": "%s",\n        "timestamp": "%s",\n        "md5": "%s",\n        "sha256": "%s",\n        "size": "%s",\n        "version": "%s",\n        "buildtype": "%s",\n        "forum": "%s",\n        "gapps": "%s",\n        "firmware": "%s",\n        "modem": "%s",\n        "bootloader": "%s",\n        "recovery": "%s",\n        "paypal": "%s",\n        "telegram": "%s",\n    }\n  ]\n}'
-                        printf "${JSON_FORMAT}" "${MAINTAINERS}" "${ROM_ZIP}" "${URL}" "${TIMESTAMP}" "${ROM_HASH}" "${ROM_ID}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${BUILD_TYPE}" "${XDA_TREAD}" "${GAPPS_URL}" "${FIRMWARE_URL}" "${MODAM_URL}" "${BOOTLOADER_URL}" "${RECOVERY_URL}" "${DONATE_URL}" "${TG_URL}" > ${CODENAME}.json
+                        printf "${JSON_FORMAT}" "${MAINTAINERS}" "${ROM_ZIP}" "${URL}" "${TIMESTAMP}" "${ROM_HASH}" "${ROM_ID}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${BUILD_TYPE}" "${XDA_TREAD}" "${GAPPS_URL}" "${FIRMWARE_URL}" "${MODEM_URL}" "${BOOTLOADER_URL}" "${RECOVERY_URL}" "${DONATE_URL}" "${TG_URL}" > ${CODENAME}.json
                         git add ${CODENAME}.json
                         git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
                         git push --repo="${GH_PUSH_URL}"
                     elif [ "${OTA_LIKE}" = "crDroid" ] && [ "${ANDROID_VERSION}" = "11" ]; then
                         JSON_FORMAT='{\n  "response": [\n    {\n        "maintainer": "%s",\n        "filename": "%s",\n        "download": "%s",\n        "timestamp": "%s",\n        "md5": "%s",\n        "size": "%s",\n        "version": "%s",\n        "buildtype": "%s",\n        "forum": "%s",\n        "gapps": "%s",\n        "firmware": "%s",\n        "modem": "%s",\n        "bootloader": "%s",\n        "recovery": "%s",\n        "paypal": "%s",\n        "telegram": "%s",\n    }\n  ]\n}'
-                        printf "${JSON_FORMAT}" "${MAINTAINERS}" "${ROM_ZIP}" "${URL}" "${TIMESTAMP}" "${ROM_HASH}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${BUILD_TYPE}" "${XDA_TREAD}" "${GAPPS_URL}" "${FIRMWARE_URL}" "${MODAM_URL}" "${BOOTLOADER_URL}" "${RECOVERY_URL}" "${DONATE_URL}" "${TG_URL}" > ${CODENAME}.json
+                        printf "${JSON_FORMAT}" "${MAINTAINERS}" "${ROM_ZIP}" "${URL}" "${TIMESTAMP}" "${ROM_HASH}" "${ROM_SIZE_BYTES}" "${REPO_BRANCH}" "${BUILD_TYPE}" "${XDA_TREAD}" "${GAPPS_URL}" "${FIRMWARE_URL}" "${MODEM_URL}" "${BOOTLOADER_URL}" "${RECOVERY_URL}" "${DONATE_URL}" "${TG_URL}" > ${CODENAME}.json
                         git add ${CODENAME}.json
                         git commit -m "OTA: ${ROM_NAME}-${CODENAME}: $(date +"%Y-%m-%d")"
                         git push --repo="${GH_PUSH_URL}"
