@@ -20,7 +20,9 @@ OS_NAME2=$(awk '/NAME=/' .KNOX | sed '/PRETTY/d' | sed '/CODENAME/d' | cut -f2 -
 OS_DISTRO=$(awk '/ID_LIKE=/' .KNOX | cut -f2 -d '=')
 if [[ "${OS_NAME}" == *"ubuntu"* ]] || [[ "${OS_NAME2}" == *"ubuntu"* ]]; then
     UBUNTU_VERSION=$(awk '/VERSION_ID=/' .KNOX | cut -f2 -d '=')
-    if [[ "${UBUNTU_VERSION}" == *"21.04"* ]] || [[ "${UBUNTU_VERSION}" == *"21.10"* ]] || [[ "${UBUNTU_VERSION}" == *"22.04"* ]]; then
+    if [[ "${UBUNTU_VERSION}" == *"22.10"* ]]; then
+        sudo apt install git repo adb fastboot curl openssh-client sshpass -y bc bison build-essential flex g++-multilib gcc-multilib gnupg gperf imagemagick lib32ncurses5-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 libxml2-utils lunzip lzop pngcrush schedtool squashfs-tools xsltproc zip zlib1g-dev openjdk-8-jdk python2 python3 perl git git-lfs libncurses5 xmlstarlet virtualenv xz-utils rr jq ruby gem ccache libssl-dev ucommon-utils protobuf-compiler 
+    elif [[ "${UBUNTU_VERSION}" == *"21.04"* ]] || [[ "${UBUNTU_VERSION}" == *"21.10"* ]] || [[ "${UBUNTU_VERSION}" == *"22.04"* ]]; then
         sudo apt install git repo adb fastboot curl openssh-client sshpass -y bc bison build-essential flex g++-multilib gcc-multilib gnupg gperf imagemagick lib32ncurses5-dev lib32z1-dev liblz4-tool libncurses5-dev libsdl1.2-dev libwxgtk3.0-gtk3-dev libxml2 libxml2-utils lunzip lzop pngcrush schedtool squashfs-tools xsltproc zip zlib1g-dev openjdk-8-jdk python perl git git-lfs libncurses5 xmlstarlet virtualenv xz-utils rr jq ruby gem ccache libssl-dev ucommon-utils protobuf-compiler
     elif [[ "${UBUNTU_VERSION}" == *"20.04"* ]]; then
         sudo apt-get install openssh-client sshpass coreutils ucommon-utils git ccache lzop bison build-essential zip curl zlib1g-dev g++-multilib libxml2-utils bzip2 libbz2-dev libghc-bzlib-dev squashfs-tools pngcrush liblz4-tool optipng libc6-dev-i386 gcc-multilib libssl-dev gnupg flex lib32ncurses-dev x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev xsltproc unzip libffi-dev libxml2-dev libxslt1-dev libjpeg8-dev fontconfig libncurses5-dev libncurses5 libncurses5:i386 python-is-python3 protobuf-compiler
