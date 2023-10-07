@@ -133,8 +133,7 @@ echo -n "Do you want to setup Github releases?: "
 read SETUP_GH
 if [ "${SETUP_GH}" = "Yes" ] || [ "${SETUP_GH}" = "yes" ] || [ "${SETUP_GH}" = "Y" ]; then
     if [[ "${OS_NAME}" == *"Ubuntu"* ]] || [[ "${OS_NAME2}" == *"Ubuntu"* ]]; then
-        wget https://github.com/cli/cli/releases/download/v2.5.2/gh_2.5.2_linux_amd64.deb
-        sudo dpkg -i gh_2.5.2_linux_amd64.deb
+        sudo apt install gh
         rm gh_2.5.2_linux_amd64.deb
         gh auth login
     elif [[ "${OS_NAME}" == *"Fedora"* ]] || [[ "${OS_NAME2}" == *"Fedora"* ]]; then
