@@ -40,22 +40,19 @@ Setup_Debian () {
 }
 
 Setup_Arch () {
-    sudo sed -i "/\[multilib\]/,/Include/"'s/^#//' /etc/pacman.conf
-    sudo pacman -Syyu --noconfirm --needed multilib-devel
-    pacman -S coreutils sshpass
+    if ! grep -q "\[multilib\]" /etc/pacman.conf ; then
+        sed -i '/\[multilib\]/,/^Include/ s/^#//' /etc/pacman.conf
+    fi
+    pacman -Syyu --noconfirm --needed multilib-devel coreutils sshpass
     DEFAULT_USER=$(who | cut -f1 -d " ")
-    for PACKAGE in "aosp-devel lineageos-devel xml2 ffmpeg imagemagick lzop ninja gradle maven"; do
-        git clone https://aur.archlinux.org/"${PACKAGE}"
+    for PACKAGE in "aosp-devel lineageos-devel xml2 ffmpeg imagemagick lzop ninja gradle maven protobuf"; do
+        git clone https://aur.archlinux.org/"${PACKAGE}".git
         cd "${PACKAGE}"
         su "${DEFAULT_USER}" -c "makepkg -si --skippgpcheck --noconfirm --needed"
         cd ..
         rm -rf "${PACKAGE}"
     done
     Setup_Repo
-    curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v21.1/protoc-21.1-linux-x86_64.zip
-    sudo unzip -o protoc-21.1-linux-x86_64.zip -d /usr/local bin/protoc
-    sudo unzip -o protoc-21.1-linux-x86_64.zip -d /usr/local 'include/*'
-    rm -f protoc-21.1-linux-x86_64.zip
 }
 
 Setup_Fedora () {
