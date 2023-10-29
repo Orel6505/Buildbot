@@ -26,6 +26,11 @@ UPLOAD_TYPE=""
 UPLOAD_RECOVERY=""
 TG_USER=""
 
+#Telegram - Optional
+TG_TOKEN=""
+TG_CHAT=""
+TG_TOPIC=""
+
 #Google Drive - Optional
 GD_PATH=""
 
@@ -59,9 +64,5 @@ SF_PATH=""
 FTP_USER=""
 FTP_PASS=""
 FTP_UPLOAD_URL=""
-
-#Telegram - Optional
-TG_TOKEN=""
-TG_CHAT=""
 
 source build.sh
