@@ -31,9 +31,6 @@ TG_TOKEN=""
 TG_CHAT=""
 TG_TOPIC=""
 
-#Google Drive - Optional
-GD_PATH=""
-
 #Github Releases & OTA - Optional
 GH_USER=""
 GH_TOKEN=""

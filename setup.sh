@@ -128,20 +128,6 @@ Setup_GH () {
     gh auth login
 }
 
-Setup_GD () {
-    GD_FOLDER="${MY_DIR}/gd"
-    if ! [ -d "${MY_DIR}"/gd ]; then
-        mkdir "${MY_DIR}"/gd
-    fi
-    cd gd
-    wget https://github.com/prasmussen/gdrive/releases/download/2.1.1/gdrive_2.1.1_linux_386.tar.gz
-    tar xf gdrive_2.1.1_linux_386.tar.gz
-    chmod +x gdrive
-    rm gdrive_2.1.1_linux_386.tar.gz
-    ./gdrive about
-    cd "${MY_DIR}"
-}
-
 Setup_SF () {
     echo -n "Please enter your SourceForge username: "
     read SF_USER
@@ -172,12 +158,6 @@ echo -n "Do you want to setup Github releases?: "
 read SETUP_GH
 if [ "${SETUP_GH}" = "Yes" ] || [ "${SETUP_GH}" = "yes" ] || [ "${SETUP_GH}" = "Y" ] || [ "${SETUP_GH}" = "y" ]; then
     Setup_GH
-fi
-
-echo -n "Do you want to setup Gdrive?: "
-read SETUP_GD
-if [ "${SETUP_GD}" = "Yes" ] || [ "${SETUP_GD}" = "yes" ] || [ "${SETUP_GD}" = "Y" ] || [ "${SETUP_GH}" = "y" ]; then
-    Setup_GD
 fi
 
 echo -n "Do you want to setup SourceForge?: "

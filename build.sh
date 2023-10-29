@@ -451,36 +451,6 @@ recovery sha256: ${RECOVERY_HASH}"
                     fi
                 fi
 
-                #if google drive
-                if [ "${UPLOAD_TYPE}" == "GD" ]; then
-                    GD_FOLDER="${MY_DIR}"/gd
-                    if ! [ -e "${GD_FOLDER}"/gdrive ]; then
-                        echo "you didn't lisen to me, Please read README.md and run first_time.sh to set Gdrive"
-                    fi
-                    cp "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"/"${ROM_ZIP}" "${GD_FOLDER}"
-                    if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                        cp "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/out/target/product/"${CODENAME}"/"${RECOVERY_IMG}" "${GDRIVE_FOLDER}"
-                    fi
-                    cd "${GD_FOLDER}"
-                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to Gdrive"  >> "${MY_DIR}"/buildbot_log.txt
-                    ./gdrive upload "${ROM_ZIP}" --parent "${GD_PATH}" --share --delete
-                    if [ "${UPLOAD_RECOVERY}" = "true" ]; then
-                        ./gdrive upload "${RECOVERY_IMG}" --parent "${GD_PATH}" --share --delete
-                    fi
-                    echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: upload to Gdrive done successfully"  >> "${MY_DIR}"/buildbot_log.txt
-                    if [ "${TG_CHAT}" != "" ]; then
-                        curl -s --data parse_mode=HTML --data text="Upload ${ROM_ZIP} for ${CODENAME} succeed!" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
-                        curl -s --data parse_mode=HTML --data text="📱 <b>New build available for ${CODENAME}</b>
-👤 by ${TG_USER}
-
-ℹ️ ROM: <code>${ROM_NAME}</code>
-🔸 Android version: <code>${ANDROID_VERSION} </code>
-📅 Build date: <code>$(date +"%d-%m-%Y")</code>
-📎 File size: <code>${ROM_SIZE}</code>
-✅ SHA256: <code>${ROM_ID}</code>" --data reply_markup="{\"inline_keyboard\": [[{\"text\":\"Download!\", \"url\": \"https://drive.google.com/drive/folders/${GD_PATH}\"}]]}" --data chat_id="${TG_CHAT}" --request POST https://api.telegram.org/bot"${TG_TOKEN}"/sendMessage 2>&1 >/dev/null
-                    fi
-                fi
-
                 #if FTP
                 if [ "${UPLOAD_TYPE}" == "FTP" ]; then
                     echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: starting to upload to FTP server"  >> "${MY_DIR}"/buildbot_log.txt
