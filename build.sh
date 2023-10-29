@@ -603,7 +603,7 @@ Build Status: ${BUILD_PRECENT}" --data message_id=${BUILD_MESSAGE} --data chat_i
     done
     if [ "$(cat "${MY_DIR}"/.buildstatus)" = 0 ]; then
         rm "${MY_DIR}"/.buildstatus
-        if [ "${TG_CHAT}" != "" ]; then
+        if [ "${TG_USER}" != "" ]; then
             if [ "${TG_TOPIC}" != "" ]; then
                 curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
@@ -632,7 +632,7 @@ Build Status: <b>Build Success</b>" --data message_id=${BUILD_MESSAGE} --data ch
         fi
     elif [ "$(cat "${MY_DIR}"/.buildstatus)" != 0 ]; then
         rm "${MY_DIR}"/.buildstatus
-        if [ "${TG_CHAT}" != "" ]; then
+        if [ "${TG_USER}" != "" ]; then
             if [ "${TG_TOPIC}" != "" ]; then
                 curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
@@ -661,7 +661,7 @@ Build Status: <b>Build Failed</b>" --data message_id=${BUILD_MESSAGE} --data cha
         fi
     else
         rm "${MY_DIR}"/.buildstatus
-        if [ "${TG_CHAT}" != "" ]; then
+        if [ "${TG_USER}" != "" ]; then
             if [ "${TG_TOPIC}" != "" ]; then
                 curl -s --data parse_mode=HTML --data text="<b>Build started for ${CODENAME}</b>
 ℹ️ ROM: <code>${ROM_NAME}</code>
