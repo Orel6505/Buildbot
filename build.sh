@@ -155,7 +155,10 @@ sync() {
 ## Build
 build() {
     cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
-    repo sync --force-sync --no-tags --no-clone-bundle
+    SYNC_BEFORE_BUILD="${SYNC_BEFORE_BUILD:=True}"
+    if [ "${SYNC_BEFORE_BUILD}" == "True" ]; then
+        repo sync --force-sync --no-tags --no-clone-bundle
+    fi
     source build/envsetup.sh
     for CODENAME in ${DEVICE_CODENAME}
     do

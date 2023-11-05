@@ -20,6 +20,7 @@ DEVICE_CODENAME=""
 AUTO_ADAPT=""
 LUNCH_NAME=""
 BACON_NAME=""
+SYNC_BEFORE_BUILD="" #True by default
 
 #Upload stuff - Optional
 UPLOAD_TYPE=""
