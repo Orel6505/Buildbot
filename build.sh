@@ -168,7 +168,11 @@ build() {
         fi
         if [ "${AUTO_ADAPT}" == "Y" ] || [ "${AUTO_ADAPT}" == "yes" ] || [ "${AUTO_ADAPT}" == "Yes" ]; then
             echo -e "$(date +"%Y-%m-%d") $(date +"%T") I: started to adapt device tree for ${CODENAME}!" >> "${MY_DIR}"/buildbot_log.txt
-            VENDOR_NAME="$(find . ~ -type d -name "${CODENAME}" | sort -nr | awk 'NR==1,NR==1')"
+            VENDOR_NAME="$(find ./device ~ -type d -name "${CODENAME}" | sort -nr | awk 'NR==1,NR==1')"
+            if [ "${VENDOR_NAME}" == "" ]
+            then
+                break 1
+            fi
             VENDOR_NAME="$(dirname $VENDOR_NAME)"
             VENDOR_NAME="$(basename $VENDOR_NAME)"
             cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"/device/"${VENDOR_NAME}"/"${CODENAME}"
