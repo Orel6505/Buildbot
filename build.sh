@@ -95,7 +95,7 @@ sync() {
     fi
     cd "${MY_DIR}"/rom/"${ROM_NAME}"-"${ANDROID_VERSION}"
     START_REPO=$(date +"%s")
-    repo init -u "${REPO_URL}" -b "${REPO_BRANCH}" --depth=1
+    repo init -u "${REPO_URL}" -b "${REPO_BRANCH}" --git-lfs --depth=1
     REPO_INIT_STATUS=${?}
     if [ "${REPO_INIT_STATUS}" != "0" ]; then
         echo -e "$(date +"%Y-%m-%d") $(date +"%T") E: REPO_URL link is broken, repo manifest not cloned. exiting..." >> "${MY_DIR}"/buildbot_log.txt
