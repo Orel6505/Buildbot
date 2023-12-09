@@ -21,6 +21,7 @@ AUTO_ADAPT=""
 LUNCH_NAME=""
 BACON_NAME=""
 SYNC_BEFORE_BUILD="" #True by default
+BUILD_J="" #default by default - don't know what does that mean? ask google "make -j"
 
 #Upload stuff - Optional
 UPLOAD_TYPE=""

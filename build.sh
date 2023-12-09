@@ -244,7 +244,11 @@ Build Status: Build Started" --data chat_id="${TG_CHAT}" --request POST https://
             if [ "${TG_CHAT}" != "" ]; then
                 buildstatus &
             fi
-            make ${BACON_NAME}
+            [ "${BUILD_J}" != "" ]; then
+                make ${BACON_NAME} -j ${BUILD_J}
+            else
+                make ${BACON_NAME}
+            fi
             BUILD_STATUS=${?}
             if [ "${TG_CHAT}" != "" ]; then
                 echo $BUILD_STATUS > "${MY_DIR}"/.buildstatus
