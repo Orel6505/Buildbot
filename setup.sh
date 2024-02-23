@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-# Copyright (C) 2022 Orel6505
+# Copyright (C) 2024 Orel6505
 #
 # SPDX-License-Identifier: GNU General Public License v3.0
 #

@@ -1,6 +1,12 @@
 import argparse, os
 import Config, Sync
 
+#
+# Copyright (C) 2024 Orel6505
+#
+# SPDX-License-Identifier: GNU General Public License v3.0
+#
+
 def Arguments() -> dict:
     parser = argparse.ArgumentParser(description="Android Building Script - Script that can assist building for one or multiple devices",formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("-l", "--location", type=str, nargs='?', default=os.getcwd(), help="Custom build location, default is current directory")

@@ -1,5 +1,11 @@
 import os, time, subprocess, asyncio, git
 
+#
+# Copyright (C) 2024 Orel6505
+#
+# SPDX-License-Identifier: GNU General Public License v3.0
+#
+
 async def Sync_ROM(sync_config: dict, Source_location: str) -> bool:
     try: 
         if not os.path.exists(Source_location):

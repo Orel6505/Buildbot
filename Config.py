@@ -1,5 +1,11 @@
 import json, os
-    
+
+#
+# Copyright (C) 2024 Orel6505
+#
+# SPDX-License-Identifier: GNU General Public License v3.0
+#
+
 def IsLocation(location) -> bool:
     if not os.path.exists(location): return False
     if not os.path.isdir(location): return False
