@@ -1,4 +1,9 @@
-import json
+import json, os
+    
+def IsLocation(location) -> bool:
+    if not os.path.exists(location): return False
+    if not os.path.isdir(location): return False
+    return True
 
 def ParseConfig(config: str) -> dict:
     with open(config, 'r') as config_path:
