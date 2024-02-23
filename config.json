@@ -1,0 +1,25 @@
+{
+    "ROM Name": "",
+    "Android Version": "",
+    "Sync": {
+        "Repo URL": "",
+        "Repo Branch": "",
+        "Manifest URL": "",
+        "Manifest Branch": "",
+        "Sync j": ""
+    },
+    "Build": {
+        "Device Codename": [],
+        "Auto Adapt": "",
+        "Lunch Name": "",
+        "Bacon Name": "",
+        "Sync Before Build": true,
+        "Make j": ""
+    },
+    "Telegram": {
+        "TG Username": "",
+        "TG Token": "",
+        "TG Chat": "",
+        "TG Topic": ""
+    }
+}
