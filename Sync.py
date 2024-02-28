@@ -1,4 +1,4 @@
-import os, time, subprocess, asyncio, git
+import os, time, subprocess, asyncio
 import Log
 
 #

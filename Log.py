@@ -4,16 +4,21 @@ from shutil import move
 class Log:
     def __init__(self, filename: str, newFileLog: bool=True) -> None:
         self.filename = filename
+        Name = f'{filename}.log'
         if newFileLog:
             try:
-                move(f'{filename}.log',f'{filename}.{int(time.time())}.log')
+                newName = f'{filename}.{int(time.time())}.log'
+                move(Name,newName)
+                mStatus = f'old log file moved from {Name} to {newName}'
             except FileNotFoundError:
-                print("File Not Exists")
-        self.log = open(f'{filename}.log', "a")
+                mStatus = "Old log file doesn\'t exist, creating it"
+        self.log = open(Name, "a")
         if not newFileLog:
             Log.__write(self,"\n---------beginning of log")
         else:
             Log.__write(self,"---------beginning of log")
+        self.writeInfo("Log initialized successfully")
+        self.writeInfo(f'{mStatus}')
 
     def __write(self, Message: str) -> None:
         try:
@@ -36,7 +41,7 @@ class Log:
     def writeFatal(self) -> None:
         Log.__write(self,"---------Fatal Error---------")
         Log.__writeLogEntry(self,"F", f'{traceback.format_exc().strip()}')
-        Log.__writeLogEntry(self,"F", f'Please upload this log in Issues https://github.com/Orel6505/Buildbot/issues under Buildbot_Crashes')
+        Log.__writeLogEntry(self,"F", "Please upload this log in Issues https://github.com/Orel6505/Buildbot/issues under Buildbot_Crashes")
         Log.__write(self,"---------Fatal Error---------")
 
     def isActive(self):
