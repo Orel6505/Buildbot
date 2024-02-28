@@ -36,6 +36,7 @@ class Log:
     def writeFatal(self) -> None:
         Log.__write(self,"---------Fatal Error---------")
         Log.__writeLogEntry(self,"F", f'{traceback.format_exc().strip()}')
+        Log.__writeLogEntry(self,"F", f'Please upload this log in Issues https://github.com/Orel6505/Buildbot/issues under Buildbot_Crashes')
         Log.__write(self,"---------Fatal Error---------")
 
     def isActive(self):

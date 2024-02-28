@@ -1,4 +1,5 @@
 import os, time, subprocess, asyncio, git
+import Log
 
 #
 # Copyright (C) 2024 Orel6505
@@ -6,22 +7,23 @@ import os, time, subprocess, asyncio, git
 # SPDX-License-Identifier: GNU General Public License v3.0
 #
 
-async def Sync_ROM(sync_config: dict, Source_location: str) -> bool:
-    try: 
+async def Sync_ROM(sync_config: dict, Source_location: str, log: Log.Log) -> bool:
+    try:
+        log.writeInfo("Starting with Syncing the ROM")
         if not os.path.exists(Source_location):
+            log.writeInfo("Source Location doesn't exist, creating it")
             os.makedirs(Source_location)
         Repo_Init_Task = asyncio.create_task(Repo_Init(sync_config["Repo_URL"], sync_config["Repo_Branch"], Source_location))
         if "Manifest URL" in sync_config:
-            manifest_location = f"{Source_location}/.repo/local_manifests"
-            Manifest_Clone_Task = asyncio.create_task(Clone_Manifest(sync_config["Manifest URL"], sync_config.get("Manifest Branch", None), manifest_location))
+            Manifest_Clone_Task = asyncio.create_task(Clone_Manifest(sync_config["Manifest URL"], sync_config.get("Manifest Branch", None), f'{Source_location}/.repo/local_manifests'))
             await Manifest_Clone_Task
         await Repo_Init_Task
         loop = asyncio.get_event_loop()
         sync = loop.create_subprocess_exec(*['repo', 'sync', '--force-sync', '--no-tags', '--no-clone-bundle'], cwd=Source_location, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         await Repo_Sync_Progress(sync)
         return True
-    except Exception as e:
-        print(e)
+    except Exception:
+        log.writeFatal()
         return False
         
 async def Repo_Init(Repo_URL: str, Repo_Branch:str, Source_location: str) -> bool:
