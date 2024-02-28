@@ -1,4 +1,4 @@
-import argparse, os, traceback
+import argparse, os, traceback, asyncio
 import Config, Sync, Log
 
 #
@@ -14,7 +14,7 @@ def Arguments() -> dict:
     args = vars(parser.parse_args())
     return args
 
-def main():
+async def main():
     try:
         # Load Log
         log = Log.Log("Buildbot")
@@ -35,8 +35,8 @@ def main():
         config = Config.LoadConfig(config_location, log)
         
         #Start Syncing
-        ROM_location = f'{location}/rom/{config["ROM Name"]}-{config["Android Version"]}'
-        Sync.Sync_ROM(config["Sync"], ROM_location, log)
+        ROM_location = f'{location}/rom/{config.get("ROM Name")}-{config.get("Android Version")}'
+        await Sync.Sync_ROM(config.get("Sync"), ROM_location, log)
     except Exception as e:
         if log.isActive:
             log.writeFatal()
@@ -48,4 +48,4 @@ def main():
 
 #Define as script
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())

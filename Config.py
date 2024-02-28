@@ -8,8 +8,8 @@ import Log
 #
 
 def LoadConfig(config_location: str, log: Log.Log) -> dict:
-    config = ParseConfig(config_location)
-    if not CheckConfig(config, log):
+    config = ParseConfig(config_location, log)
+    if CheckConfig(config, log):
         return config
     return None
 
@@ -34,7 +34,7 @@ def CheckConfig(config: dict, log: Log.Log) -> bool:
         Knox_Info+=["Android Version"]
         Knox+=1
         
-    Sync_dict=config.get("Sync", {})
+    Sync_dict=config.get("Sync")
     if ValNullInDict(Sync_dict,"Repo URL"):
         Knox_Info+=["Repo URL"]
         Knox+=1
@@ -42,8 +42,8 @@ def CheckConfig(config: dict, log: Log.Log) -> bool:
         Knox_Info+=["Repo Branch"]
         Knox+=1
     
-    Build_dict=config.get("Build", {})
-    if ValNullInDict(Build_dict,"Device Codenames"): 
+    Build_dict=config.get("Build")
+    if not len(Build_dict.get("Device Codenames")): 
         Knox_Info+=["Device Codenames"]
         Knox+=1
     if ValNullInDict(Build_dict,"Lunch Name"):
